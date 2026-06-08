@@ -2086,6 +2086,7 @@ Boot.init = function(){
     if(ms>0) Session._timer=setTimeout(function(){ Session.refresh().catch(function(){}); }, ms);
     else Session.refresh().catch(function(){});
     App.state.user=sess;
+    console.log("Session restored. Keycloak groups:", Session.groups(), "-> mapped role:", Auth.mapRole(Session.groups()));
     Seed.loadFromApi().then(function(db){ DB=db; Boot.enter(); }).catch(function(e){
       console.error("Session restore failed:", e);
       Auth.logout();
