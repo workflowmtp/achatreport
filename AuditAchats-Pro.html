@@ -1768,6 +1768,7 @@ var Session = {
   },
   _set:function(j){
     this.token=j.access_token; this.refreshToken=j.refresh_token; this.parsed=this._parse(j.access_token);
+    Store.set("kc_token", j.access_token); Store.set("kc_refresh", j.refresh_token);
     if(this._timer) clearTimeout(this._timer);
     var ms = Math.max(15, (j.expires_in||300)-30)*1000;
     this._timer = setTimeout(function(){ Session.refresh().catch(function(){}); }, ms);
@@ -1786,6 +1787,7 @@ var Session = {
     var c=window.APP_CONFIG, rt=this.refreshToken;
     if(this._timer) clearTimeout(this._timer);
     this.token=this.refreshToken=this.parsed=null;
+    Store.del("kc_token"); Store.del("kc_refresh");
     if(rt){ fetch(this._url("logout"), { method:"POST",
       headers:{"Content-Type":"application/x-www-form-urlencoded"},
       body:Session._form({ client_id:c.clientId, client_secret:c.clientSecret, refresh_token:rt })
@@ -2049,6 +2051,17 @@ Boot.init = function(){
   document.getElementById("btnTheme").addEventListener("click", this.toggleTheme);
   document.getElementById("btnLogout").addEventListener("click", function(){ Auth.logout(); });
   document.getElementById("btnAlerts").addEventListener("click", function(){ Router.go("alertes"); });
+  var t=Store.get("kc_token"), rt=Store.get("kc_refresh"), sess=Store.get("session");
+  if(t && rt && sess){
+    Session.token=t; Session.refreshToken=rt; Session.parsed=Session._parse(t);
+    var exp=Session.parsed&&Session.parsed.exp||0;
+    var ms=Math.max(15, exp-Math.floor(Date.now()/1000)-30)*1000;
+    if(ms>0) Session._timer=setTimeout(function(){ Session.refresh().catch(function(){}); }, ms);
+    else Session.refresh().catch(function(){});
+    App.state.user=sess;
+    Seed.loadFromApi().then(function(db){ DB=db; Boot.enter(); }).catch(function(){ Boot.renderLoginForm(); });
+    return;
+  }
   var l=document.getElementById("login"); if(l) l.style.display="flex";
   Boot.renderLoginForm();
 };
