@@ -960,6 +960,7 @@ App.afterRender.consult=function(){
     var consRows=DB.consultations.filter(function(c){ return ApiFilters.matchDate("rfqs",c.date); });
     document.getElementById("consTable").innerHTML=C.table([
       {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>'+(r.source==="fallback_da"?' '+C.pill("DA","info"):"");}},
+      {t:"Date",r:function(r){return Util.date(r.date);}},
       {t:"Article",r:function(r){return Util.esc(Seed.art(r.articleId).nom)+' (×'+r.qte+')';}},
       {t:"Offres",num:true,r:function(r){return r.offres.length+'/'+r.nbConsulteRequis+(r.offres.length<r.nbConsulteRequis?' '+C.pill("insuffisant","imp"):"");}},
       {t:"Meilleur prix",num:true,r:function(r){return r.offres.length&&r.offres[0].prix>0?'<b class="mono">'+Util.fcfa(r.offres[0].prix)+'</b>':'<span class="muted">NA</span>';}},
