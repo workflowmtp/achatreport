@@ -1180,6 +1180,7 @@ App.afterRender.factures=function(){
     var rows=DB.factures.filter(function(f){ var ok=ApiFilters.matchDate("invoices",f.date)&&(!q||f.num.toLowerCase().indexOf(q)>=0||Seed.four(f.fournisseurId).nom.toLowerCase().indexOf(q)>=0); if(st&&f.statut!==st) ok=false; if(cf){ var cok=!f.sansReception&&!f.ecartPrix&&!f.ecartQte&&!f.doublon; if(cf==="ok"&&!cok) ok=false; if(cf==="nok"&&cok) ok=false; } return ok; });
     document.getElementById("facTable").innerHTML=C.table([
       {t:"N° Facture",r:function(r){return '<b class="mono">'+Util.esc(r.num)+'</b>';}},
+      {t:"Date",r:function(r){return Util.date(r.date);}},
       {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom);}},
       {t:"Commande",k:"commandeId"},
       {t:"HT",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.ht)+'</span>';}},
@@ -1204,6 +1205,7 @@ function facDetail(id){
   var f=DB.factures.filter(function(x){return x.id===id;})[0]; var c=DB.commandes.filter(function(x){return x.id===f.commandeId;})[0];
   var body='<dl class="kv">'+
     '<dt>Fournisseur</dt><dd>'+Util.esc(Seed.four(f.fournisseurId).nom)+'</dd>'+
+    '<dt>Date</dt><dd>'+Util.date(f.date)+'</dd>'+
     '<dt>Commande</dt><dd>'+(f.commandeId||"—")+' · PU cmd '+(c?Util.fcfa(c.pu):"—")+'</dd>'+
     '<dt>Réception</dt><dd>'+(f.receptionId||'<span class="pill crit">aucune</span>')+'</dd>'+
     '<dt>Qté / PU facturés</dt><dd>'+f.qteFact+' × '+Util.fcfa(f.puFact)+'</dd>'+
