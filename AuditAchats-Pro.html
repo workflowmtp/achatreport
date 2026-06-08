@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuditAchats Pro — Pilotage & Contrôle des Achats (Sage X3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sidebar:#0F172A; --sidebar-2:#1E293B; --sidebar-hov:#334155;
+  --bg:#F1F5F9; --card:#FFFFFF; --border:#E2E8F0; --line:#EDF2F7;
+  --txt:#0F172A; --txt-2:#475569; --txt-3:#94A3B8;
+  --brand:#2563EB; --brand-2:#1D4ED8;
+  --info:#0EA5E9; --ok:#16A34A; --warn:#F59E0B; --imp:#EA580C; --crit:#DC2626;
+  --info-bg:#E0F2FE; --ok-bg:#DCFCE7; --warn-bg:#FEF3C7; --imp-bg:#FFEDD5; --crit-bg:#FEE2E2;
+  --shadow:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.04);
+  --shadow-lg:0 10px 30px rgba(15,23,42,.12);
+  --r:12px; --r-sm:8px;
+}
+[data-theme="dark"]{
+  --bg:#0B1220; --card:#111A2E; --border:#22304A; --line:#1B2840;
+  --txt:#E2E8F0; --txt-2:#94A3B8; --txt-3:#64748B;
+  --info-bg:#0c2a3a; --ok-bg:#0d2a1a; --warn-bg:#3a2e0c; --imp-bg:#3a230c; --crit-bg:#3a1414;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--txt)}
+a{color:var(--brand);text-decoration:none}
+
+/* LOGIN */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0F172A,#1E293B);z-index:50}
+.login-card{background:var(--card);border-radius:16px;padding:36px;width:440px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.login-card h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.login-card .sub{color:var(--txt-2);font-size:13px;margin-bottom:22px}
+.login-card .erp{display:inline-flex;align-items:center;gap:6px;background:var(--info-bg);color:var(--info);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;margin-bottom:18px}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.profile-btn{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px;text-align:left;transition:.15s;background:var(--card)}
+.profile-btn:hover{border-color:var(--brand);background:var(--bg)}
+.profile-btn b{display:block;font-size:13px;font-weight:600}
+.profile-btn span{font-size:11px;color:var(--txt-3)}
+
+/* SHELL */
+#shell{display:none;height:100vh}
+#shell.on{display:grid;grid-template-columns:248px 1fr;grid-template-rows:auto 1fr}
+.sidebar{grid-row:1/3;background:var(--sidebar);color:#CBD5E1;display:flex;flex-direction:column;overflow-y:auto}
+.brand{padding:18px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--sidebar-2)}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#0EA5E9);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:16px}
+.brand b{color:#fff;font-size:15px;display:block;line-height:1.1}
+.brand small{font-size:10px;color:#64748B}
+.nav{padding:8px}
+.nav-grp{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#475569;padding:14px 12px 6px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;color:#CBD5E1;transition:.12s;width:100%;text-align:left;position:relative}
+.nav-item:hover{background:var(--sidebar-2);color:#fff}
+.nav-item.active{background:var(--brand);color:#fff;font-weight:600}
+.nav-item .ic{width:18px;text-align:center;flex-shrink:0}
+.nav-item .badge{margin-left:auto;background:var(--crit);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.nav-item.active .badge{background:rgba(255,255,255,.25)}
+.side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--sidebar-2);font-size:11px;color:#64748B}
+
+/* TOPBAR */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 22px;display:flex;align-items:center;gap:16px;height:60px}
+.topbar h2{font-size:17px;font-weight:600}
+.topbar .crumb{font-size:12px;color:var(--txt-3)}
+.topbar .sp{flex:1}
+.icon-btn{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--txt-2);transition:.12s;position:relative}
+.icon-btn:hover{background:var(--bg)}
+.icon-btn .dot{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--crit);border:2px solid var(--card)}
+.user-chip{display:flex;align-items:center;gap:9px;padding:5px 10px 5px 6px;border-radius:30px;background:var(--bg)}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#0EA5E9);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px}
+.user-chip b{font-size:12px;font-weight:600}
+.user-chip span{font-size:10px;color:var(--txt-3);display:block}
+
+/* MAIN */
+.main{overflow-y:auto;padding:22px}
+.page-head{margin-bottom:18px}
+.page-head h1{font-size:20px;font-weight:700}
+.page-head p{color:var(--txt-2);font-size:13px;margin-top:2px}
+
+/* CARDS / KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:.15s}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--brand)}
+.kpi .lbl{font-size:12px;color:var(--txt-2);display:flex;align-items:center;gap:7px}
+.kpi .val{font-size:26px;font-weight:700;margin-top:6px}
+.kpi .sub{font-size:11px;color:var(--txt-3);margin-top:3px}
+.kpi.dim-crit{border-left:4px solid var(--crit)} .kpi.dim-imp{border-left:4px solid var(--imp)}
+.kpi.dim-warn{border-left:4px solid var(--warn)} .kpi.dim-ok{border-left:4px solid var(--ok)}
+.kpi.dim-info{border-left:4px solid var(--info)} .kpi.dim-brand{border-left:4px solid var(--brand)}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:18px}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.card-h h3{font-size:14px;font-weight:600}
+.card-h .sp{flex:1}
+.card-b{padding:16px 18px}
+.card-b.flush{padding:0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:1100px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--txt-3);border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:hover{background:var(--bg)}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace}
+.t-wrap{overflow-x:auto}
+
+/* BADGES / PILLS */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pill.info{background:var(--info-bg);color:var(--info)} .pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.imp{background:var(--imp-bg);color:var(--imp)}
+.pill.crit{background:var(--crit-bg);color:var(--crit)} .pill.mut{background:var(--bg);color:var(--txt-2)}
+.dotp{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dotp.info{background:var(--info)} .dotp.ok{background:var(--ok)} .dotp.warn{background:var(--warn)}
+.dotp.imp{background:var(--imp)} .dotp.crit{background:var(--crit)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;transition:.12s;border:1px solid transparent}
+.btn.primary{background:var(--brand);color:#fff}.btn.primary:hover{background:var(--brand-2)}
+.btn.ghost{background:var(--card);border-color:var(--border);color:var(--txt-2)}.btn.ghost:hover{background:var(--bg)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.danger{background:var(--crit);color:#fff}
+.input,select.input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--card);outline:none;transition:.12s}
+.input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:600;color:var(--txt-2);margin-bottom:5px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar .input{width:auto;min-width:200px}
+.seg{display:inline-flex;background:var(--bg);border-radius:8px;padding:3px;gap:2px}
+.seg button{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;color:var(--txt-2)}
+.seg button.on{background:var(--card);color:var(--brand);box-shadow:var(--shadow)}
+
+/* PROGRESS / MISC */
+.bar{height:7px;border-radius:6px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:6px}
+.empty{text-align:center;padding:40px;color:var(--txt-3)}
+.empty .ic{font-size:34px;opacity:.4}
+.tag-deny{opacity:.5}
+.muted{color:var(--txt-3)}
+.flex{display:flex;align-items:center;gap:8px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.spark{display:flex;align-items:flex-end;gap:3px;height:38px}
+.spark i{flex:1;background:var(--brand);border-radius:2px 2px 0 0;opacity:.85;min-height:2px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
+.modal{background:var(--card);border-radius:14px;width:680px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center}
+.modal-h h3{font-size:16px;font-weight:700;flex:1}
+.modal-b{padding:20px}
+.modal-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:8px 14px;font-size:13px}
+.kv dt{color:var(--txt-2)}.kv dd{font-weight:500}
+
+/* TOAST */
+#toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:80}
+.toast{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--brand);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow-lg);min-width:280px;animation:slidein .2s}
+.toast.ok{border-left-color:var(--ok)}.toast.warn{border-left-color:var(--warn)}.toast.crit{border-left-color:var(--crit)}
+@keyframes slidein{from{transform:translateX(20px);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-card">
+    <div class="erp">● Connecté à Sage X3 — base miroir (lecture seule)</div>
+    <h1>AuditAchats Pro</h1>
+    <div class="sub">Pilotage, contrôle et audit des achats — MULTIPRINT / MetaBuilding</div>
+    <form id="loginForm" autocomplete="on" style="display:flex;flex-direction:column;gap:14px;text-align:left;margin-top:8px">
+      <div class="field">
+        <label for="kcUser">Nom d'utilisateur</label>
+        <input id="kcUser" type="text" autocomplete="username" required
+          style="width:100%;padding:11px 13px;border-radius:9px;border:1px solid #cbd5e1;background:transparent;color:inherit;font-size:14px;box-sizing:border-box">
+      </div>
+      <div class="field">
+        <label for="kcPass">Mot de passe</label>
+        <input id="kcPass" type="password" autocomplete="current-password" required
+          style="width:100%;padding:11px 13px;border-radius:9px;border:1px solid #cbd5e1;background:transparent;color:inherit;font-size:14px;box-sizing:border-box">
+      </div>
+      <div id="kcErr" style="display:none;color:#DC2626;font-size:13px;line-height:1.4"></div>
+      <button id="kcSubmit" type="submit" class="profile-btn"
+        style="justify-content:center;font-weight:600;cursor:pointer">Se connecter</button>
+    </form>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div id="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">A</div>
+      <div><b>AuditAchats</b><small>Pilotage achats · Sage X3</small></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <header class="topbar">
+    <div><h2 id="pageTitle">Tableau de bord</h2><div class="crumb" id="crumb">Accueil</div></div>
+    <div class="sp"></div>
+    <button class="icon-btn" id="btnAlerts" title="Alertes">🔔<span class="dot" id="alertDot" style="display:none"></span></button>
+    <button class="icon-btn" id="btnTheme" title="Thème">🌓</button>
+    <div class="user-chip" id="userChip"></div>
+    <button class="icon-btn" id="btnLogout" title="Changer de profil">⎋</button>
+  </header>
+  <main class="main" id="view"></main>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ============================================================
+   PARTIE 1 — SOCLE : Util, Store, RBAC, Seed, Router
+   Convention : JS vanilla, concaténation de chaînes uniquement.
+   ============================================================ */
+"use strict";
+var App = { state:{ user:null, route:"dashboard" }, views:{}, nav:[] };
+
+/* ---------- UTIL ---------- */
+var Util = {
+  esc:function(s){
+    if(s===null||s===undefined) return "";
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  },
+  fcfa:function(n){
+    n = Number(n)||0;
+    return Math.round(n).toLocaleString("fr-FR").replace(/\u202f/g," ") + " FCFA";
+  },
+  num:function(n,d){ d=d||0; return (Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}); },
+  pct:function(n){ return (Number(n)||0).toFixed(1)+" %"; },
+  date:function(d){ if(!d) return "—"; var x=new Date(d); return x.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"}); },
+  today:function(){ return new Date().toISOString().slice(0,10); },
+  daysBetween:function(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); },
+  uid:function(p){ return (p||"id")+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); },
+  TVA:0.1925
+};
+
+/* ---------- STORE (localStorage namespacé) ---------- */
+var Store = {
+  K:"achats_",
+  get:function(key,def){
+    try{ var v=localStorage.getItem(this.K+key); return v?JSON.parse(v):(def===undefined?null:def); }
+    catch(e){ return def===undefined?null:def; }
+  },
+  set:function(key,val){ try{ localStorage.setItem(this.K+key,JSON.stringify(val)); }catch(e){} },
+  del:function(key){ localStorage.removeItem(this.K+key); }
+};
+
+/* ---------- RBAC : 7 profils ---------- */
+var PERMS = ["dashboard","da","consult","commandes","receptions","factures","stocks","mrp",
+  "analyses","anomalies","validations","alertes","documents","journal","exports","ia","params","scoring_ach"];
+
+var ROLES = {
+  acheteur:   { label:"Acheteur", desc:"Demandes, consultations, commandes (périmètre)", color:"#2563EB",
+    perms:["dashboard","da","consult","commandes","receptions","factures","stocks","mrp","alertes","documents","ia"] },
+  da:         { label:"Directeur des achats", desc:"Service complet, scoring, budgets", color:"#7C3AED",
+    perms:PERMS.filter(function(p){return p!=="params";}) },
+  magasin:    { label:"Magasin / Stocks", desc:"Stocks, réceptions, réappro, MRP", color:"#0EA5E9",
+    perms:["dashboard","stocks","mrp","receptions","commandes","alertes","ia"] },
+  finance:    { label:"Finance", desc:"Factures, budgets, engagements, écarts", color:"#16A34A",
+    perms:["dashboard","factures","analyses","validations","alertes","exports","ia","documents"] },
+  qualite:    { label:"Qualité / Maintenance", desc:"Conformité, articles critiques", color:"#F59E0B",
+    perms:["dashboard","receptions","stocks","documents","alertes","ia"] },
+  dg:         { label:"Direction Générale", desc:"Vision consolidée, risques, abus", color:"#EA580C",
+    perms:PERMS.slice() },
+  audit:      { label:"Audit / Contrôle interne", desc:"Lecture intégrale, audit (sans modif)", color:"#DC2626",
+    perms:["dashboard","da","consult","commandes","receptions","factures","analyses","anomalies","validations","alertes","documents","journal","exports","ia"], readonly:true }
+};
+
+var Auth = {
+  can:function(perm){ var u=App.state.user; if(!u) return false; var r=ROLES[u.role]; return r && r.perms.indexOf(perm)>=0; },
+  readonly:function(){ var u=App.state.user; return u && ROLES[u.role] && ROLES[u.role].readonly; },
+  login:function(role){
+    App.state.user = { role:role, name:ROLES[role].label, initials:ROLES[role].label.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase() };
+    Store.set("session", App.state.user);
+    Boot.enter();
+  },
+  logout:function(){ Store.del("session"); App.state.user=null; document.getElementById("shell").classList.remove("on"); document.getElementById("login").style.display="flex"; }
+};
+
+/* ---------- TOAST ---------- */
+function toast(msg,type){
+  var t=document.createElement("div"); t.className="toast "+(type||"");
+  t.innerHTML='<div style="font-size:13px">'+Util.esc(msg)+'</div>';
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(function(){ t.style.opacity="0"; t.style.transform="translateX(20px)"; setTimeout(function(){t.remove();},250); },3200);
+}
+
+/* ---------- MODAL ---------- */
+var Modal = {
+  open:function(title,bodyHtml,footHtml){
+    this.close();
+    var bg=document.createElement("div"); bg.className="modal-bg"; bg.id="modalBg";
+    bg.innerHTML='<div class="modal"><div class="modal-h"><h3>'+Util.esc(title)+'</h3>'+
+      '<button class="icon-btn" data-mclose>✕</button></div>'+
+      '<div class="modal-b">'+bodyHtml+'</div>'+
+      (footHtml?'<div class="modal-f">'+footHtml+'</div>':'')+'</div>';
+    document.body.appendChild(bg);
+    bg.addEventListener("click",function(e){ if(e.target===bg||e.target.hasAttribute("data-mclose")) Modal.close(); });
+  },
+  close:function(){ var m=document.getElementById("modalBg"); if(m) m.remove(); }
+};
+
+/* ---------- ROUTER ---------- */
+var Router = {
+  go:function(route){
+    if(!Auth.can(route) && route!=="dashboard"){ toast("Accès non autorisé pour votre profil","warn"); return; }
+    App.state.route=route; Store.set("route",route);
+    document.querySelectorAll(".nav-item").forEach(function(n){ n.classList.toggle("active", n.getAttribute("data-route")===route); });
+    var def=App.nav.reduce(function(a,g){ return a.concat(g.items); },[]).filter(function(i){return i.id===route;})[0]||{label:route,crumb:""};
+    document.getElementById("pageTitle").textContent=def.label;
+    document.getElementById("crumb").textContent=def.crumb||def.label;
+    var v=App.views[route];
+    document.getElementById("view").innerHTML = v ? v() : '<div class="empty"><div class="ic">🚧</div><p>Module en cours de chargement…</p></div>';
+    if(v && App.afterRender[route]) App.afterRender[route]();
+    document.getElementById("view").scrollTop=0;
+  }
+};
+App.afterRender={};
+
+/* ---------- NAV DEFINITION ---------- */
+App.nav=[
+  { grp:"Pilotage", items:[
+    {id:"dashboard",label:"Tableau de bord",crumb:"Pilotage · Synthèse",ic:"▦"},
+    {id:"alertes",label:"Alertes",crumb:"Pilotage · Alertes",ic:"🔔"},
+  ]},
+  { grp:"Cycle achat", items:[
+    {id:"da",label:"Demandes d'achat",crumb:"Cycle · Demandes",ic:"📝"},
+    {id:"consult",label:"Consultations & offres",crumb:"Cycle · Consultations",ic:"⚖"},
+    {id:"commandes",label:"Commandes",crumb:"Cycle · Commandes fournisseurs",ic:"📦"},
+    {id:"receptions",label:"Réceptions",crumb:"Cycle · Réceptions",ic:"📥"},
+    {id:"factures",label:"Factures (3 voies)",crumb:"Cycle · Contrôle factures",ic:"🧾"},
+  ]},
+  { grp:"Stocks & besoins", items:[
+    {id:"stocks",label:"Stocks & sécurité",crumb:"Stocks",ic:"🏬"},
+    {id:"mrp",label:"MRP / Réappro",crumb:"Stocks · MRP",ic:"🔄"},
+  ]},
+  { grp:"Analyse & contrôle", items:[
+    {id:"analyses",label:"Analyses",crumb:"Analyses",ic:"📊"},
+    {id:"anomalies",label:"Anomalies & abus",crumb:"Contrôle · Anomalies",ic:"⚠"},
+    {id:"validations",label:"Validations",crumb:"Contrôle · Validations",ic:"✔"},
+  ]},
+  { grp:"Audit & IA", items:[
+    {id:"documents",label:"Documents scannés",crumb:"Audit · Documents",ic:"📎"},
+    {id:"journal",label:"Journal d'activité",crumb:"Audit · Traçabilité",ic:"📜"},
+    {id:"exports",label:"Exports audit",crumb:"Audit · Exports",ic:"⬇"},
+    {id:"ia",label:"Agent IA achats",crumb:"Assistant IA",ic:"✨"},
+  ]},
+  { grp:"Configuration", items:[
+    {id:"params",label:"Paramètres & délégation",crumb:"Config · Matrice de délégation",ic:"⚙"},
+  ]},
+];
+
+/* ---------- BOOT ---------- */
+var Boot = {
+  init:function(){
+    Seed.ensure();
+    this.renderLogin();
+    document.getElementById("btnTheme").addEventListener("click",this.toggleTheme);
+    document.getElementById("btnLogout").addEventListener("click",function(){ Auth.logout(); });
+    document.getElementById("btnAlerts").addEventListener("click",function(){ Router.go("alertes"); });
+    var th=Store.get("theme","light"); document.documentElement.setAttribute("data-theme",th);
+    var sess=Store.get("session"); if(sess){ App.state.user=sess; this.enter(); }
+  },
+  toggleTheme:function(){
+    var cur=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";
+    document.documentElement.setAttribute("data-theme",cur); Store.set("theme",cur);
+  },
+  renderLogin:function(){
+    var g=document.getElementById("profileGrid"), html="";
+    Object.keys(ROLES).forEach(function(k){
+      var r=ROLES[k];
+      html+='<button class="profile-btn" data-role="'+k+'"><b>'+Util.esc(r.label)+'</b><span>'+Util.esc(r.desc)+'</span></button>';
+    });
+    g.innerHTML=html;
+    g.querySelectorAll(".profile-btn").forEach(function(b){
+      b.addEventListener("click",function(){ Auth.login(b.getAttribute("data-role")); });
+    });
+  },
+  enter:function(){
+    document.getElementById("login").style.display="none";
+    document.getElementById("shell").classList.add("on");
+    this.renderNav(); this.renderUser();
+    var route=Store.get("route","dashboard"); if(!Auth.can(route)&&route!=="dashboard") route="dashboard";
+    Router.go(route);
+    if(window.Alerts) Boot.refreshAlertBadges();
+  },
+  renderNav:function(){
+    var nav=document.getElementById("nav"), html="";
+    App.nav.forEach(function(grp){
+      var items=grp.items.filter(function(i){ return Auth.can(i.id)||i.id==="dashboard"; });
+      if(!items.length) return;
+      html+='<div class="nav-grp">'+Util.esc(grp.grp)+'</div>';
+      items.forEach(function(i){
+        html+='<button class="nav-item" data-route="'+i.id+'"><span class="ic">'+i.ic+'</span>'+Util.esc(i.label)+
+          '<span class="badge" data-badge="'+i.id+'" style="display:none"></span></button>';
+      });
+    });
+    nav.innerHTML=html;
+    nav.querySelectorAll(".nav-item").forEach(function(n){ n.addEventListener("click",function(){ Router.go(n.getAttribute("data-route")); }); });
+    document.getElementById("sideFoot").innerHTML='Profil : <b style="color:#CBD5E1">'+Util.esc(ROLES[App.state.user.role].label)+'</b>'+
+      (Auth.readonly()?' · <span style="color:#F59E0B">lecture seule</span>':'');
+  },
+  renderUser:function(){
+    var u=App.state.user, r=ROLES[u.role];
+    document.getElementById("userChip").innerHTML='<div class="avatar" style="background:'+r.color+'">'+Util.esc(u.initials)+'</div>'+
+      '<div><b>'+Util.esc(u.name)+'</b><span>'+(Auth.readonly()?"Lecture seule":"Connecté")+'</span></div>';
+  },
+  refreshAlertBadges:function(){
+    if(!window.Alerts) return;
+    var list=Alerts.all(), crit=list.filter(function(a){return a.prio==="crit"&&!a.done;}).length;
+    var dot=document.getElementById("alertDot"); dot.style.display=crit>0?"block":"none";
+    var b=document.querySelector('[data-badge="alertes"]'); if(b){ b.textContent=crit; b.style.display=crit>0?"":"none"; }
+    var an=document.querySelector('[data-badge="anomalies"]');
+    if(an && window.Anomalies){ var na=Anomalies.all().filter(function(x){return x.prio==="crit";}).length; an.textContent=na; an.style.display=na>0?"":"none"; }
+  }
+};
+</script>
+<script>
+/* ============================================================
+   PARTIE 1bis — DONNÉES (miroir Sage X3) + Matrice délégation
+   ============================================================ */
+var DB = {};
+var Seed = {
+  ensure:function(){
+    if(Store.get("seeded")){ DB = Store.get("db"); this.matrix=Store.get("matrix")||this.defaultMatrix(); return; }
+    DB = this.build();
+    this.matrix = this.defaultMatrix();
+    Store.set("db",DB); Store.set("matrix",this.matrix); Store.set("seeded",1);
+  },
+  save:function(){ Store.set("db",DB); },
+  reset:function(){ Store.del("seeded"); Store.del("db"); Store.del("matrix"); Store.del("journal"); this.ensure(); },
+
+  defaultMatrix:function(){
+    return {
+      paliers:[
+        {code:"P1",min:0,        max:250000,    valid:"Acheteur",                  consult:1, dbl:false, comment:false, note:"Prix catalogue accepté"},
+        {code:"P2",min:250001,   max:1000000,   valid:"Acheteur + Resp. achats",   consult:2, dbl:false, comment:true,  note:"Commentaire si fournisseur unique"},
+        {code:"P3",min:1000001,  max:5000000,   valid:"Directeur des achats",      consult:3, dbl:true,  comment:true,  note:"Double validation Achats + Finance"},
+        {code:"P4",min:5000001,  max:25000000,  valid:"Directeur Général",         consult:3, dbl:true,  comment:true,  note:"Grille comparative obligatoire"},
+        {code:"P5",min:25000001, max:null,      valid:"DG + PCA / Conseil",        consult:4, dbl:true,  comment:true,  note:"Appel d'offres + note d'opportunité"}
+      ],
+      regles:{
+        urgenceMaxPalier:"P3", urgenceRegulHeures:48,
+        fractionnementJours:30,
+        heureDebutNormale:7, heureFinNormale:19,
+        kycObligatoire:true, ribDoubleValid:true
+      }
+    };
+  },
+  palierFor:function(montant){
+    var p=this.matrix.paliers, i;
+    for(i=0;i<p.length;i++){ if(montant>=p[i].min && (p[i].max===null||montant<=p[i].max)) return p[i]; }
+    return p[p.length-1];
+  },
+
+  build:function(){
+    var rnd=function(a,b){ return Math.floor(Math.random()*(b-a+1))+a; };
+    var pick=function(a){ return a[rnd(0,a.length-1)]; };
+    var dOff=function(days){ var d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); };
+
+    /* Fournisseurs */
+    var fourNoms=["IMPRIM-SUPPLY SARL","CIMENCAM DISTRIB","STEEL COILS CMR","POLYMER PACK SA","BY STEEL","SPEED LOGISTICS SARL",
+      "ENCRES & SOLVANTS CI","ALU PROFILES DLA","EPS MATERIALS CO","HARDWARE IMPORT GROUP","VITRAGE OUEST","QUINCAILLERIE CENTRALE",
+      "TRANSIT KRIBI PORT","CHEMICALS WAFRICA","PACKAGING PLUS"];
+    var fournisseurs=fourNoms.map(function(nom,i){
+      var homol = i!==5 && i!==10; // 2 non homologués
+      var notes=[92,88,75,81,64,55,79,86,70,90,48,72,83,67,77];
+      return { id:"FRN"+(100+i), nom:nom, niu:"P"+rnd(100000000,999999999)+"M", rccm:"RC/DLA/"+rnd(2018,2024)+"/B/"+rnd(1000,9999),
+        homologue:homol, kyc: i!==4 && i!==10, note:notes[i],
+        delaiMoyen:rnd(7,45), tauxConf:rnd(72,99), retards:rnd(0,9),
+        cond:pick(["30j net","45j net","Comptant","60j net","Acompte 40%"]),
+        risque: notes[i]>85?"fiable": notes[i]>70?"surveiller": notes[i]>55?"risque":"remplacer",
+        ribModifie: i===10, dateCreation:dOff(-rnd(60,900)), categorie: i<4?"stratégique":"standard" };
+    });
+
+    /* Articles + familles */
+    var familles=["Encres & consommables","Acier & profilés","Polymères / EPS","Quincaillerie","Vitrage","Transport & transit","Énergie & fluides","Emballage"];
+    var artNoms=["Encre offset cyan 5kg","Plaque CTP 745x605","Bobine PEBD 50µ","Tôle acier 1.2mm","Profilé LGS 89mm","Bloc EPS 100kg/m³",
+      "Charnière inox 100mm","Verre feuilleté 44.2","Solvant lavage 25L","Colle PU 310ml","Vis autoperceuse 4.8x38","Panneau sandwich 50mm",
+      "Mousse PU bidon","Cornière alu 40x40","Profilé PVC dormant","Cartouche silicone","Palette transport","Film étirable 17µ",
+      "Cadre serigraphie","Rouleau adhésif double face"];
+    var articles=artNoms.map(function(nom,i){
+      var pu=[18500,9200,1250000,890000,12800,45000,2200,38000,42000,3500,85,52000,7800,9500,6400,1900,8500,28000,15000,4200][i];
+      var crit = [3,4,7,11,5,15].indexOf(i)>=0;
+      return { id:"ART"+(200+i), code:"A"+(1000+i), nom:nom, famille:pick(familles), pu:pu,
+        puStd:Math.round(pu*(0.95+Math.random()*0.12)),
+        stock:rnd(0,400), secu:rnd(20,80), min:rnd(10,40), max:rnd(300,800),
+        reserve:rnd(0,60), enCmd:rnd(0,120), transit:rnd(0,80),
+        consoMoy:rnd(5,90), delaiAppro:rnd(7,60), critique:crit,
+        fournisseurPref: fournisseurs[rnd(0,fournisseurs.length-1)].id };
+    });
+
+    var services=["Production Offset","Production Flexo","Extrusion","Atelier LGS","Atelier EPS","Maintenance","Magasin Central","Direction","Qualité","META POINT Akwa"];
+    var acheteurs=["A. NGONO","B. FOTSO","C. MBALLA","D. TCHINDA","E. KAMGA"];
+
+    /* Demandes d'achat */
+    var statutsDA=["En attente","Validée","Transformée","Refusée"];
+    var demandes=[]; for(var i=0;i<28;i++){
+      var art=pick(articles), q=rnd(5,200), urgent=Math.random()<0.3;
+      var dispo = art.stock>q;
+      demandes.push({ id:"DA"+(5000+i), demandeur:pick(["J. Eboa","M. Sanou","R. Owona","L. Nkeng","S. Atangana"]),
+        service:pick(services), articleId:art.id, qte:q, motif: Math.random()<0.18?"":pick(["Réappro production","Stock sécurité","Commande client","Maintenance préventive","Projet chantier"]),
+        urgent:urgent, dateDemande:dOff(-rnd(1,40)), dateSouhaitee:dOff(rnd(-5,25)),
+        statut:pick(statutsDA), acheteur:pick(acheteurs), validHier:Math.random()<0.7,
+        budget:pick(services), dispoStock:dispo, fournisseurPropose:art.fournisseurPref,
+        commande:null, commentaire:"", horsBudget:Math.random()<0.15, horsProc:Math.random()<0.12 });
+    }
+
+    /* Consultations & offres */
+    var consultations=[]; for(var i=0;i<14;i++){
+      var art=pick(articles), nFour=rnd(1,4), offres=[];
+      var base=art.pu;
+      for(var j=0;j<nFour;j++){
+        var f=pick(fournisseurs);
+        offres.push({ fournisseurId:f.id, prix:Math.round(base*(0.88+Math.random()*0.35)),
+          delai:rnd(5,50), cond:f.cond, fraisAnnexes:rnd(0,80000), devise:"FCFA",
+          validite:dOff(rnd(5,40)), docRecu:Math.random()<0.8, choisi:false });
+      }
+      offres.sort(function(a,b){return a.prix-b.prix;});
+      var choix = Math.random()<0.25 ? rnd(0,offres.length-1) : 0; // parfois pas le moins cher
+      offres[choix].choisi=true;
+      consultations.push({ id:"CONS"+(700+i), articleId:art.id, qte:rnd(10,150),
+        date:dOff(-rnd(2,30)), acheteur:pick(acheteurs), offres:offres,
+        justifChoix: choix!==0 ? (Math.random()<0.5?"Meilleur délai":"") : "Meilleur prix",
+        nbConsulteRequis:3 });
+    }
+
+    /* Commandes fournisseurs */
+    var commandes=[]; for(var i=0;i<32;i++){
+      var art=pick(articles), f=pick(fournisseurs), q=rnd(10,250);
+      var pu=Math.round(art.pu*(0.9+Math.random()*0.3));
+      var dCmd=dOff(-rnd(1,50)), prevue=dOff(rnd(-15,30));
+      var retard = new Date(prevue)<new Date() && Math.random()<0.45;
+      var liee = Math.random()<0.7;
+      commandes.push({ id:"CMD"+(9000+i), fournisseurId:f.id, articleId:art.id, qte:q, pu:pu,
+        montant:q*pu, devise:"FCFA", dateCmd:dCmd, livPrevue:prevue, livReelle: retard?null:(Math.random()<0.6?dOff(-rnd(0,5)):null),
+        statut: retard?"En retard":pick(["En cours","Soldée","En cours","Validée"]),
+        acheteur:pick(acheteurs), daLiee: liee?("DA"+(5000+rnd(0,27))):null,
+        budget:pick(services), validee:Math.random()<0.78,
+        consultee:Math.random()<0.72, modifApresValid:Math.random()<0.12,
+        annuleeReprise:Math.random()<0.08, prixAnormal: pu>art.pu*1.18,
+        homologue:f.homologue, heureSaisie:rnd(0,23) });
+    }
+
+    /* Réceptions */
+    var receptions=[]; for(var i=0;i<24;i++){
+      var c=pick(commandes); var qRecu=Math.round(c.qte*(0.85+Math.random()*0.3));
+      var ecartQ = qRecu!==c.qte;
+      receptions.push({ id:"REC"+(8000+i), commandeId:c.id, fournisseurId:c.fournisseurId, articleId:c.articleId,
+        qteCmd:c.qte, qteRecu:qRecu, qteAccept:Math.round(qRecu*(Math.random()<0.85?1:0.9)),
+        date:dOff(-rnd(0,20)), lot:Math.random()<0.85?("LOT-"+rnd(10000,99999)):"",
+        controlee:Math.random()<0.8, controleur:pick(acheteurs.concat(["Magasin"])),
+        docQualite:Math.random()<0.7, conforme:Math.random()<0.82, sansCommande:Math.random()<0.06,
+        habilite:Math.random()<0.9, ecartQte:ecartQ });
+    }
+
+    /* Factures fournisseurs */
+    var factures=[]; for(var i=0;i<26;i++){
+      var c=pick(commandes); var rec=receptions.filter(function(r){return r.commandeId===c.id;})[0];
+      var qFact=rec?rec.qteRecu:c.qte; var puFact=Math.round(c.pu*(0.97+Math.random()*0.12));
+      var ht=qFact*puFact; var tva=Math.round(ht*Util.TVA);
+      factures.push({ id:"FAC"+(7000+i), num:"FF-"+rnd(2024,2025)+"-"+rnd(1000,9999), fournisseurId:c.fournisseurId,
+        commandeId:c.id, receptionId:rec?rec.id:null, articleId:c.articleId,
+        qteFact:qFact, puFact:puFact, ht:ht, tauxTva:Util.TVA, tva:tva, ttc:ht+tva,
+        transport:rnd(0,150000), date:dOff(-rnd(0,30)), echeance:dOff(rnd(5,60)), devise:"FCFA",
+        sansReception: !rec, ecartPrix: Math.abs(puFact-c.pu)/c.pu>0.05, ecartQte: rec? (qFact!==rec.qteRecu):false,
+        doublon:Math.random()<0.06, justifie:Math.random()<0.85, controlee:Math.random()<0.7,
+        statut:pick(["À contrôler","Contrôlée","En anomalie","Validée"]) });
+    }
+
+    /* Budgets */
+    var budgets=services.map(function(s){
+      var b=rnd(8,60)*1000000; var real=Math.round(b*(0.4+Math.random()*0.8));
+      return { service:s, alloue:b, realise:real, engage:Math.round(b*Math.random()*0.3), depasse:real>b };
+    });
+
+    /* Validations */
+    var validations=[]; var objs=["Demande","Commande","Réception","Facture","Fournisseur","Achat urgent","Dépassement budget"];
+    for(var i=0;i<30;i++){
+      validations.push({ id:"VAL"+(6000+i), objet:pick(objs), ref:"REF-"+rnd(1000,9999),
+        valideur:pick(acheteurs.concat(["DA","DG","Finance"])), date:dOff(-rnd(0,40)),
+        niveau:pick(["P1","P2","P3","P4","P5"]), montant:rnd(50000,30000000),
+        justif:Math.random()<0.75, commentaire:Math.random()<0.6?"OK conforme":"",
+        doubleControle:Math.random()<0.55, rapide:Math.random()<0.2, habilite:Math.random()<0.9 });
+    }
+
+    /* Documents scannés */
+    var typesDoc=["Devis","Proforma","Bon de commande","Bon de livraison","Facture","Certificat qualité","Document douanier","Document bancaire","Contrat","KYC fournisseur","Attestation fiscale"];
+    var documents=[]; for(var i=0;i<22;i++){
+      documents.push({ id:"DOC"+(4000+i), type:pick(typesDoc), fournisseurId:pick(fournisseurs).id,
+        numero:"D-"+rnd(10000,99999), date:dOff(-rnd(0,60)), rapproche:Math.random()<0.7,
+        coherent:Math.random()<0.78, montant:rnd(50000,8000000), lieRef:Math.random()<0.6?("CMD"+(9000+rnd(0,31))):null });
+    }
+
+    return { fournisseurs:fournisseurs, articles:articles, services:services, acheteurs:acheteurs,
+      demandes:demandes, consultations:consultations, commandes:commandes, receptions:receptions,
+      factures:factures, budgets:budgets, validations:validations, documents:documents };
+  },
+
+  /* helpers de résolution */
+  four:function(id){ return DB.fournisseurs.filter(function(f){return f.id===id;})[0]||{nom:"?",note:0}; },
+  art:function(id){ return DB.articles.filter(function(a){return a.id===id;})[0]||{nom:"?",pu:0}; }
+};
+
+/* ---------- JOURNAL (traçabilité) ---------- */
+var Journal = {
+  log:function(action,objet,detail,impact){
+    var j=Store.get("journal",[]);
+    j.unshift({ id:Util.uid("log"), ts:new Date().toISOString(), user:(App.state.user?App.state.user.name:"système"),
+      action:action, objet:objet, detail:detail||"", impact:impact||"" });
+    if(j.length>500) j=j.slice(0,500);
+    Store.set("journal",j);
+  },
+  all:function(){ return Store.get("journal",[]); }
+};
+</script>
+<script>
+/* ============================================================
+   MOTEUR TRANSVERSAL — Anomalies / Abus + Alertes (§10/§11)
+   Priorités : info < warn < imp < crit
+   ============================================================ */
+var Anomalies = {
+  _cache:null,
+  all:function(){
+    if(!this._cache){
+      if(DB.anomalies_api && DB.anomalies_api.length){
+        this._cache = DB.anomalies_api.map(function(a){
+          return {
+            cat: a.anomaly_type || "Anomalie",
+            prio: (a.severity==="critique"?"crit":a.severity) || "info",
+            objet: a.title || a.anomaly_type || "Anomalie",
+            ref: a.reference || a.id || "",
+            msg: a.description || a.suggestion || "",
+            risk_score: a.risk_score,
+            status: a.status,
+            suggestion: a.suggestion,
+            amount: a.amount,
+            currency: a.currency,
+            detected_at: a.detected_at,
+            is_false_positive: a.is_false_positive,
+            module: a.module,
+            source_table: a.source_table
+          };
+        });
+      } else {
+        this._cache=this.scan();
+      }
+    }
+    return this._cache;
+  },
+  refresh:function(){ this._cache=null; return this.all(); },
+  add:function(L,cat,prio,objet,ref,msg){ L.push({cat:cat,prio:prio,objet:objet,ref:ref,msg:msg}); },
+
+  scan:function(){
+    var L=[], M=Seed.matrix, A=this.add;
+    /* --- Demandes (procédure) --- */
+    DB.demandes.forEach(function(d){
+      var art=Seed.art(d.articleId);
+      if(!d.motif) A(L,"Procédure","warn","Demande",d.id,"Demande sans justification");
+      if(d.horsBudget) A(L,"Budget","imp","Demande",d.id,"Demande hors budget ("+d.service+")");
+      if(d.statut==="En attente" && Util.daysBetween(d.dateDemande,Util.today())>10) A(L,"Procédure","imp","Demande",d.id,"Demande non traitée depuis "+Util.daysBetween(d.dateDemande,Util.today())+" j");
+      if(d.dispoStock && d.statut!=="Refusée") A(L,"Procédure","warn","Demande",d.id,"Article déjà disponible en stock ("+art.nom+")");
+      if(d.urgent && !d.validHier) A(L,"Procédure","imp","Demande",d.id,"Demande urgente non validée");
+      if(d.horsProc) A(L,"Procédure","warn","Demande",d.id,"Demande créée hors procédure");
+    });
+    /* --- Consultations --- */
+    DB.consultations.forEach(function(c){
+      if(c.offres.length < c.nbConsulteRequis) A(L,"Consultation","imp","Consultation",c.id,"Consultation insuffisante ("+c.offres.length+"/"+c.nbConsulteRequis+" offres)");
+      var offresPrix=c.offres.filter(function(o){return o.prix>0;});
+      var choisi=offresPrix.filter(function(o){return o.choisi;})[0], min=offresPrix[0];
+      if(choisi && min && choisi.prix>min.prix && !c.justifChoix) A(L,"Consultation","imp","Consultation",c.id,"Offre non optimale retenue sans justification (+"+Util.fcfa(choisi.prix-min.prix)+")");
+    });
+    /* --- Commandes (abus Sage) --- */
+    var byFour={};
+    DB.commandes.forEach(function(c){
+      var f=Seed.four(c.fournisseurId), art=Seed.art(c.articleId);
+      if(!c.validee) A(L,"Validation","imp","Commande",c.id,"Commande non validée");
+      if(c.statut==="En retard") A(L,"Délai","imp","Commande",c.id,"Commande en retard chez "+f.nom);
+      if(!c.daLiee) A(L,"Procédure","warn","Commande",c.id,"Commande sans demande d'achat");
+      if(!c.consultee) A(L,"Consultation","warn","Commande",c.id,"Commande sans consultation");
+      if(!c.homologue) A(L,"Abus","crit","Commande",c.id,"Commande auprès d'un fournisseur NON homologué ("+f.nom+")");
+      if(c.modifApresValid) A(L,"Abus","crit","Commande",c.id,"Commande modifiée après validation");
+      if(c.annuleeReprise) A(L,"Abus","warn","Commande",c.id,"Commande annulée puis ressaisie");
+      if(c.prixAnormal) A(L,"Prix","imp","Commande",c.id,"Prix anormal sur "+art.nom+" ("+Util.fcfa(c.pu)+" vs std "+Util.fcfa(art.puStd)+")");
+      if(c.heureSaisie<M.regles.heureDebutNormale||c.heureSaisie>=M.regles.heureFinNormale) A(L,"Abus","warn","Commande",c.id,"Opération à heure anormale ("+c.heureSaisie+"h)");
+      var k=c.fournisseurId+"|"+art.famille; byFour[k]=(byFour[k]||0)+c.montant;
+    });
+    /* --- Fractionnement (cumul > palier sans validation du palier) --- */
+    Object.keys(byFour).forEach(function(k){
+      var total=byFour[k]; var p=Seed.palierFor(total);
+      var parts=k.split("|");
+      if(total>1000000 && (p.code==="P3"||p.code==="P4"||p.code==="P5")){
+        A(L,"Abus","crit","Fournisseur",parts[0],"Fractionnement probable : cumul "+Util.fcfa(total)+" ("+parts[1]+") → palier "+p.code+" non couvert");
+      }
+    });
+    /* --- Réceptions --- */
+    DB.receptions.forEach(function(r){
+      var f=Seed.four(r.fournisseurId);
+      if(r.sansCommande) A(L,"Réception","crit","Réception",r.id,"Réception sans commande");
+      if(r.qteRecu>r.qteCmd) A(L,"Réception","imp","Réception",r.id,"Réception supérieure à la commande (+"+(r.qteRecu-r.qteCmd)+")");
+      if(!r.controlee) A(L,"Réception","warn","Réception",r.id,"Réception non contrôlée");
+      if(!r.conforme) A(L,"Qualité","imp","Réception",r.id,"Article non conforme ("+f.nom+")");
+      if(!r.lot) A(L,"Réception","warn","Réception",r.id,"Lot / n° de série non renseigné");
+      if(!r.habilite) A(L,"Abus","imp","Réception",r.id,"Réception par une personne non habilitée");
+    });
+    /* --- Factures (contrôle 3 voies) --- */
+    DB.factures.forEach(function(fac){
+      var f=Seed.four(fac.fournisseurId);
+      if(fac.sansReception) A(L,"Facture","crit","Facture",fac.num,"Facture sans réception");
+      if(fac.doublon) A(L,"Facture","crit","Facture",fac.num,"Facture en double");
+      if(fac.ecartPrix) A(L,"Facture","imp","Facture",fac.num,"Écart de prix commande / facture");
+      if(fac.ecartQte) A(L,"Facture","imp","Facture",fac.num,"Écart de quantité réception / facture");
+      if(!fac.justifie) A(L,"Facture","warn","Facture",fac.num,"Facture sans justificatif");
+      if(Math.abs(fac.tva - fac.ht*Util.TVA)>1000) A(L,"Facture","imp","Facture",fac.num,"Taux de TVA incohérent");
+    });
+    /* --- Fournisseurs (référentiel) --- */
+    DB.fournisseurs.forEach(function(f){
+      if(!f.homologue) A(L,"Fournisseur","warn","Fournisseur",f.id,"Fournisseur non homologué : "+f.nom);
+      if(!f.kyc) A(L,"Fournisseur","imp","Fournisseur",f.id,"KYC incomplet : "+f.nom);
+      if(f.ribModifie) A(L,"Abus","crit","Fournisseur",f.id,"Coordonnées bancaires modifiées : "+f.nom+" (double validation requise)");
+      if(f.risque==="remplacer") A(L,"Fournisseur","imp","Fournisseur",f.id,"Fournisseur à risque/remplacer : "+f.nom+" (note "+f.note+")");
+    });
+    /* --- Validations --- */
+    DB.validations.forEach(function(v){
+      if(!v.justif) A(L,"Validation","imp","Validation",v.id,"Validation "+v.objet+" sans justificatif");
+      if(v.rapide) A(L,"Validation","warn","Validation",v.id,"Validation trop rapide ("+v.objet+")");
+      if(!v.habilite) A(L,"Validation","crit","Validation",v.id,"Validation par personne non habilitée");
+      var p=Seed.palierFor(v.montant);
+      if((p.code==="P3"||p.code==="P4"||p.code==="P5") && !v.doubleControle) A(L,"Validation","imp","Validation",v.id,"Palier "+p.code+" sans double contrôle (montant "+Util.fcfa(v.montant)+")");
+      if(p.comment && !v.commentaire) A(L,"Validation","warn","Validation",v.id,"Commentaire obligatoire manquant (palier "+p.code+")");
+    });
+    /* --- Stocks / réappro --- */
+    DB.articles.forEach(function(a){
+      if(a.stock<=0) A(L,"Stock","crit","Article",a.id,"Rupture de stock : "+a.nom);
+      else if(a.stock<a.secu) A(L,"Stock","imp","Article",a.id,"Stock sous seuil de sécurité : "+a.nom+" ("+a.stock+"/"+a.secu+")");
+      if(a.critique && !Seed.four(a.fournisseurPref).homologue) A(L,"Stock","imp","Article",a.id,"Article critique sans fournisseur homologué actif : "+a.nom);
+    });
+    /* --- Documents --- */
+    DB.documents.forEach(function(d){
+      if(!d.coherent) A(L,"Document","warn","Document",d.id,"Incohérence document/Sage : "+d.type+" "+d.numero);
+    });
+    return L;
+  },
+  byPrio:function(p){ return this.all().filter(function(a){return a.prio===p;}); },
+  byCat:function(c){ return this.all().filter(function(a){return a.cat===c;}); }
+};
+
+var PRIO_RANK={info:0,warn:1,imp:2,crit:3};
+var PRIO_LABEL={info:"Information",warn:"Attention",imp:"Important",crit:"Critique"};
+
+var Alerts = {
+  all:function(){
+    var done=Store.get("alertsDone",{});
+    return Anomalies.all().map(function(a,i){
+      var id="AL"+i;
+      return { id:id, prio:a.prio, cat:a.cat, objet:a.objet, ref:a.ref, msg:a.msg, done:!!done[id] };
+    }).sort(function(x,y){ return PRIO_RANK[y.prio]-PRIO_RANK[x.prio]; });
+  },
+  toggle:function(id){
+    var done=Store.get("alertsDone",{}); done[id]=!done[id]; Store.set("alertsDone",done);
+    Journal.log(done[id]?"Traitement alerte":"Réouverture alerte","Alerte",id);
+  }
+};
+</script>
+<script>
+/* ============================================================
+   COMPOSANTS UI réutilisables
+   ============================================================ */
+var C = {
+  kpi:function(o){
+    return '<div class="kpi dim-'+(o.dim||"brand")+'" data-go="'+(o.go||"")+'">'+
+      '<div class="lbl">'+Util.esc(o.label)+'</div>'+
+      '<div class="val mono">'+o.val+'</div>'+
+      (o.sub?'<div class="sub">'+Util.esc(o.sub)+'</div>':'')+'</div>';
+  },
+  pill:function(text,type){ return '<span class="pill '+(type||"mut")+'">'+Util.esc(text)+'</span>'; },
+  prioPill:function(p){ return '<span class="pill '+p+'"><span class="dotp '+p+'"></span>'+PRIO_LABEL[p]+'</span>'; },
+  bar:function(pct,color){ pct=Math.max(0,Math.min(100,pct)); return '<div class="bar"><i style="width:'+pct+'%;background:'+(color||"var(--brand)")+'"></i></div>'; },
+  spark:function(arr){ var mx=Math.max.apply(null,arr)||1; var h=arr.map(function(v){return '<i style="height:'+Math.round(v/mx*100)+'%"></i>';}).join(""); return '<div class="spark">'+h+'</div>'; },
+  empty:function(t){ return '<div class="empty"><div class="ic">📭</div><p>'+Util.esc(t||"Aucune donnée")+'</p></div>'; },
+  table:function(cols,rows){
+    var h='<div class="t-wrap"><table><thead><tr>';
+    cols.forEach(function(c){ h+='<th class="'+(c.num?"num":"")+'">'+Util.esc(c.t)+'</th>'; });
+    h+='</tr></thead><tbody>';
+    if(!rows.length){ h+='<tr><td colspan="'+cols.length+'">'+C.empty()+'</td></tr>'; }
+    rows.forEach(function(r){ h+='<tr'+(r._attr||"")+'>'; cols.forEach(function(c){ h+='<td class="'+(c.num?"num":"")+'">'+(c.r?c.r(r):Util.esc(r[c.k]))+'</td>'; }); h+='</tr>'; });
+    return h+'</tbody></table></div>';
+  }
+};
+function bindGo(scope){
+  (scope||document).querySelectorAll("[data-go]").forEach(function(el){
+    var r=el.getAttribute("data-go"); if(!r) return;
+    el.addEventListener("click",function(){ Router.go(r); });
+  });
+}
+
+/* ============================================================
+   PARTIE 2 — TABLEAU DE BORD
+   ============================================================ */
+App.views.dashboard=function(){
+  var an=Anomalies.all();
+  var crit=an.filter(function(a){return a.prio==="crit";}).length;
+  var imp=an.filter(function(a){return a.prio==="imp";}).length;
+  var daAtt=DB.demandes.filter(function(d){return d.statut==="En attente";}).length;
+  var cmdRetard=DB.commandes.filter(function(c){return c.statut==="En retard";}).length;
+  var cmdNonVal=DB.commandes.filter(function(c){return !c.validee;}).length;
+  var facCtrl=DB.factures.filter(function(f){return f.statut==="À contrôler"||f.statut==="En anomalie";}).length;
+  var ruptures=DB.articles.filter(function(a){return a.stock<=0;}).length;
+  var sousSecu=DB.articles.filter(function(a){return a.stock>0&&a.stock<a.secu;}).length;
+  var fourRisque=DB.fournisseurs.filter(function(f){return f.risque==="risque"||f.risque==="remplacer";}).length;
+  var caTotal=DB.commandes.reduce(function(s,c){return s+c.montant;},0);
+
+  /* achats par famille */
+  var famMap={}; DB.commandes.forEach(function(c){ var f=Seed.art(c.articleId).famille; famMap[f]=(famMap[f]||0)+c.montant; });
+  var fams=Object.keys(famMap).map(function(k){return {k:k,v:famMap[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,6);
+  var famMax=fams.length?fams[0].v:1;
+
+  /* top fournisseurs CA */
+  var caF={}; DB.commandes.forEach(function(c){ caF[c.fournisseurId]=(caF[c.fournisseurId]||0)+c.montant; });
+  var topF=Object.keys(caF).map(function(id){return {f:Seed.four(id),v:caF[id]};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
+
+  var html='<div class="page-head"><h1>Tableau de bord achats</h1><p>Vision consolidée — données Sage X3 (miroir, lecture seule) · '+Util.date(Util.today())+'</p></div>';
+
+  html+='<div class="kpis">'+
+    C.kpi({label:"⚠ Anomalies critiques",val:crit,sub:"+ "+imp+" importantes",dim:"crit",go:"anomalies"})+
+    C.kpi({label:"📝 Demandes en attente",val:daAtt,sub:"à traiter",dim:"warn",go:"da"})+
+    C.kpi({label:"📦 Commandes en retard",val:cmdRetard,sub:cmdNonVal+" non validées",dim:"imp",go:"commandes"})+
+    C.kpi({label:"🧾 Factures à contrôler",val:facCtrl,sub:"avant paiement",dim:"info",go:"factures"})+
+    C.kpi({label:"🏬 Ruptures de stock",val:ruptures,sub:sousSecu+" sous seuil sécurité",dim:"crit",go:"stocks"})+
+    C.kpi({label:"🏭 Fournisseurs à risque",val:fourRisque,sub:"sur "+DB.fournisseurs.length,dim:"warn",go:"analyses"})+
+    C.kpi({label:"💰 Engagement achats",val:Util.num(Math.round(caTotal/1000000))+" M",sub:"FCFA cumulés",dim:"ok",go:"analyses"})+
+    C.kpi({label:"🔔 Alertes ouvertes",val:an.length,sub:"toutes priorités",dim:"brand",go:"alertes"})+
+  '</div>';
+
+  html+='<div class="grid-2">';
+  /* Achats par famille */
+  html+='<div class="card"><div class="card-h"><h3>Achats par famille</h3></div><div class="card-b">';
+  fams.forEach(function(f){
+    html+='<div style="margin-bottom:12px"><div class="between" style="margin-bottom:5px"><span style="font-size:13px">'+Util.esc(f.k)+'</span><b class="mono" style="font-size:12px">'+Util.fcfa(f.v)+'</b></div>'+C.bar(f.v/famMax*100)+'</div>';
+  });
+  html+='</div></div>';
+
+  /* Répartition anomalies par catégorie */
+  var catMap={}; an.forEach(function(a){ catMap[a.cat]=(catMap[a.cat]||0)+1; });
+  var cats=Object.keys(catMap).map(function(k){return {k:k,v:catMap[k]};}).sort(function(a,b){return b.v-a.v;});
+  html+='<div class="card"><div class="card-h"><h3>Anomalies par catégorie</h3><div class="sp"></div><button class="btn ghost sm" data-go="anomalies">Tout voir →</button></div><div class="card-b flush">';
+  html+=C.table([
+    {t:"Catégorie",k:"k"},
+    {t:"Occurrences",num:true,r:function(r){return '<b class="mono">'+r.v+'</b>';}}
+  ],cats);
+  html+='</div></div>';
+  html+='</div>';
+
+  /* Top fournisseurs + alertes critiques récentes */
+  html+='<div class="grid-2">';
+  html+='<div class="card"><div class="card-h"><h3>Top fournisseurs (engagement)</h3></div><div class="card-b flush">';
+  html+=C.table([
+    {t:"Fournisseur",r:function(r){return Util.esc(r.f.nom)+(r.f.homologue?"":' '+C.pill("non homol.","crit"));}},
+    {t:"Note",num:true,r:function(r){return '<span class="pill '+(r.f.note>85?"ok":r.f.note>70?"warn":"crit")+'">'+r.f.note+'</span>';}},
+    {t:"Engagement",num:true,r:function(r){return '<b class="mono">'+Util.fcfa(r.v)+'</b>';}}
+  ],topF);
+  html+='</div></div>';
+
+  html+='<div class="card"><div class="card-h"><h3>Alertes critiques</h3><div class="sp"></div><button class="btn ghost sm" data-go="alertes">Centre d\'alertes →</button></div><div class="card-b flush">';
+  var ac=Alerts.all().filter(function(a){return a.prio==="crit"&&!a.done;}).slice(0,6);
+  html+=C.table([
+    {t:"Priorité",r:function(r){return C.prioPill(r.prio);}},
+    {t:"Catégorie",k:"cat"},
+    {t:"Détail",r:function(r){return Util.esc(r.msg);}}
+  ],ac);
+  html+='</div></div>';
+  html+='</div>';
+
+  return html;
+};
+App.afterRender.dashboard=function(){ bindGo(document.getElementById("view")); };
+</script>
+<script>
+/* ============================================================
+   PARTIE 3 — DEMANDES D'ACHAT
+   ============================================================ */
+function anomFor(objet,ref){ return Anomalies.all().filter(function(a){return a.objet===objet&&a.ref===ref;}); }
+function flagCell(objet,ref){ var n=anomFor(objet,ref); if(!n.length) return C.pill("OK","ok");
+  var top=n.sort(function(a,b){return PRIO_RANK[b.prio]-PRIO_RANK[a.prio];})[0];
+  return '<span class="pill '+top.prio+'" title="'+Util.esc(n.map(function(x){return x.msg;}).join(" · "))+'">'+n.length+' anomalie'+(n.length>1?"s":"")+'</span>'; }
+
+App.views.da=function(){
+  var html='<div class="page-head"><h1>Demandes d\'achat</h1><p>Suivi de la création jusqu\'à la transformation en commande</p></div>';
+  var att=DB.demandes.filter(function(d){return d.statut==="En attente";}).length;
+  var urg=DB.demandes.filter(function(d){return d.urgent;}).length;
+  html+='<div class="kpis">'+
+    C.kpi({label:"Total demandes",val:DB.demandes.length,dim:"brand"})+
+    C.kpi({label:"En attente",val:att,dim:"warn"})+
+    C.kpi({label:"Urgentes",val:urg,dim:"imp"})+
+    C.kpi({label:"Hors budget",val:DB.demandes.filter(function(d){return d.horsBudget;}).length,dim:"crit"})+
+  '</div>';
+  html+='<div class="card"><div class="card-h"><h3>Liste des demandes</h3><div class="sp"></div>'+
+    '<select class="input" id="daStatut" style="width:160px"><option value="">Tous statuts</option><option>En attente</option><option>Validée</option><option>Transformée</option><option>Refusée</option></select>'+
+    '<input class="input" id="daSearch" placeholder="Rechercher…" style="width:200px;margin-left:8px"></div>'+ApiFilters.bar("requisitions","Période demandes")+'<div class="card-b flush" id="daTable"></div></div>';
+  return html;
+};
+App.afterRender.da=function(){
+  var render=function(){ var q=(document.getElementById("daSearch").value||"").toLowerCase(); var st=document.getElementById("daStatut").value;
+    var rows=DB.demandes.filter(function(d){ var art=Seed.art(d.articleId); var ok=(!q||d.id.toLowerCase().indexOf(q)>=0||art.nom.toLowerCase().indexOf(q)>=0||d.service.toLowerCase().indexOf(q)>=0); if(st&&d.statut!==st) ok=false; return ok; });
+    document.getElementById("daTable").innerHTML=C.table([
+      {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>'+(r.urgent?' '+C.pill("URGENT","imp"):"");}},
+      {t:"Article",r:function(r){return Util.esc(Seed.art(r.articleId).nom);}},
+      {t:"Service",k:"service"},
+      {t:"Qté",num:true,k:"qte"},
+      {t:"Demandé le",r:function(r){return Util.date(r.dateDemande);}},
+      {t:"Statut",r:function(r){var m={"En attente":"warn","Validée":"info","Transformée":"ok","Refusée":"mut"};return C.pill(r.statut,m[r.statut]);}},
+      {t:"Contrôle",r:function(r){return flagCell("Demande",r.id);}},
+      {t:"",r:function(r){return '<button class="btn ghost sm" data-da="'+r.id+'">Détail</button>';}}
+    ],rows);
+    document.querySelectorAll("[data-da]").forEach(function(b){ b.addEventListener("click",function(){ daDetail(b.getAttribute("data-da")); }); });
+  };
+  document.getElementById("daSearch").addEventListener("input",render);
+  document.getElementById("daStatut").addEventListener("change",render);
+  ApiFilters.bind("requisitions","requisitions",function(){ return {statut:document.getElementById("daStatut").value}; });
+  render();
+};
+function daDetail(id){
+  var d=DB.demandes.filter(function(x){return x.id===id;})[0]; var art=Seed.art(d.articleId), f=Seed.four(d.fournisseurPropose);
+  var an=anomFor("Demande",id);
+  var body='<dl class="kv">'+
+    '<dt>Demandeur</dt><dd>'+Util.esc(d.demandeur)+' — '+Util.esc(d.service)+'</dd>'+
+    '<dt>Article</dt><dd>'+Util.esc(art.nom)+' (qté '+d.qte+')</dd>'+
+    '<dt>Motif</dt><dd>'+(d.motif?Util.esc(d.motif):'<span class="pill warn">non renseigné</span>')+'</dd>'+
+    '<dt>Urgence</dt><dd>'+(d.urgent?C.pill("Urgente","imp"):"Normale")+'</dd>'+
+    '<dt>Dates</dt><dd>demande '+Util.date(d.dateDemande)+' · souhaitée '+Util.date(d.dateSouhaitee)+'</dd>'+
+    '<dt>Validation hiér.</dt><dd>'+(d.validHier?C.pill("Validée","ok"):C.pill("En attente","warn"))+'</dd>'+
+    '<dt>Dispo stock</dt><dd>'+(d.dispoStock?C.pill("Disponible","ok"):"Insuffisant")+'</dd>'+
+    '<dt>Fournisseur proposé</dt><dd>'+Util.esc(f.nom)+'</dd>'+
+    '<dt>Budget</dt><dd>'+Util.esc(d.budget)+'</dd></dl>';
+  if(an.length){ body+='<div style="margin-top:16px"><b style="font-size:12px">Anomalies détectées</b>'; an.forEach(function(a){ body+='<div style="margin-top:8px">'+C.prioPill(a.prio)+' '+Util.esc(a.msg)+'</div>'; }); body+='</div>'; }
+  Modal.open("Demande "+id,body,'<button class="btn ghost" data-mclose>Fermer</button>');
+}
+
+/* ============================================================
+   PARTIE 4 — CONSULTATIONS & COMPARATEUR D'OFFRES (TCO pondéré)
+   ============================================================ */
+App.views.consult=function(){
+  var html='<div class="page-head"><h1>Consultations & comparaison des offres</h1><p>Comparateur multicritères — coût total d\'acquisition (TCO)</p></div>';
+  html+='<div class="kpis">'+
+    C.kpi({label:"Consultations",val:DB.consultations.length,dim:"brand"})+
+    C.kpi({label:"Offres reçues",val:DB.consultations.reduce(function(s,c){return s+c.offres.length;},0),dim:"info"})+
+    C.kpi({label:"Consult. insuffisantes",val:DB.consultations.filter(function(c){return c.offres.length<c.nbConsulteRequis;}).length,dim:"imp"})+
+  '</div>';
+  html+='<div class="card"><div class="card-h"><h3>Consultations</h3></div>'+ApiFilters.bar("rfqs","Période consultations")+'<div class="card-b flush" id="consTable"></div></div>';
+  return html;
+};
+App.afterRender.consult=function(){
+  document.getElementById("consTable").innerHTML=C.table([
+    {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>'+(r.source==="fallback_da"?' '+C.pill("DA","info"):"");}},
+    {t:"Article",r:function(r){return Util.esc(Seed.art(r.articleId).nom)+' (×'+r.qte+')';}},
+    {t:"Offres",num:true,r:function(r){return r.offres.length+'/'+r.nbConsulteRequis+(r.offres.length<r.nbConsulteRequis?' '+C.pill("insuffisant","imp"):"");}},
+    {t:"Meilleur prix",num:true,r:function(r){return r.offres.length&&r.offres[0].prix>0?'<b class="mono">'+Util.fcfa(r.offres[0].prix)+'</b>':'<span class="muted">NA</span>';}},
+    {t:"Contrôle",r:function(r){return flagCell("Consultation",r.id);}},
+    {t:"",r:function(r){return '<button class="btn primary sm" data-cons="'+r.id+'">'+(r.source==="fallback_da"?"Voir":"Comparer")+'</button>';}}
+  ],DB.consultations);
+  document.querySelectorAll("[data-cons]").forEach(function(b){ b.addEventListener("click",function(){ consCompare(b.getAttribute("data-cons")); }); });
+  ApiFilters.bind("rfqs","rfqs",function(){ return {}; });
+};
+function scoreOffre(o,minPrix,minDelai,four){
+  var sPrix = minPrix/o.prix*40;                 // 40 pts prix
+  var sDelai= minDelai/o.delai*25;               // 25 pts délai
+  var sNote = four.note/100*20;                  // 20 pts fiabilité
+  var sDoc  = (o.docRecu?10:0);                  // 10 pts conformité doc
+  var sHom  = (four.homologue?5:0);              //  5 pts homologation
+  return Math.round(sPrix+sDelai+sNote+sDoc+sHom);
+}
+function consCompare(id){
+  var c=DB.consultations.filter(function(x){return x.id===id;})[0]; var art=Seed.art(c.articleId);
+  if(!c.offres.length || c.offres.filter(function(o){return o.prix>0&&o.delai>0;}).length===0){
+    var info='<p class="muted" style="margin-bottom:14px">Article : <b>'+Util.esc(art.nom)+'</b> · quantité '+c.qte+' · consultation du '+Util.date(c.date)+'</p>';
+    if(c.source==="fallback_da") info+='<p style="margin-bottom:14px">'+C.pill("Source DA","info")+" Les tables RFQ Sage sont vides ; cette consultation est dérivée des demandes d'achat. Les prix, délais et critères de choix ne sont pas disponibles.</p>";
+    info+=C.table([
+      {t:"Fournisseur",r:function(o){var f=Seed.four(o.fournisseurId); return Util.esc(f.nom||o.nom||o.fournisseurId)+(f.homologue?"":' '+C.pill("non homol.","crit"));}},
+      {t:"Prix unit.",r:function(){return '<span class="muted">NA</span>';}},
+      {t:"Délai",r:function(){return '<span class="muted">NA</span>';}},
+      {t:"Document",r:function(o){return o.docRecu?C.pill("reçu","ok"):'<span class="muted">NA</span>';}}
+    ],c.offres);
+    Modal.open("Consultation — "+id,info,'<button class="btn ghost" data-mclose>Fermer</button>');
+    return;
+  }
+  var minPrix=Math.min.apply(null,c.offres.map(function(o){return o.prix;}));
+  var minDelai=Math.min.apply(null,c.offres.map(function(o){return o.delai;}));
+  var scored=c.offres.map(function(o){ var f=Seed.four(o.fournisseurId); var tco=o.prix*c.qte+o.fraisAnnexes; return {o:o,f:f,tco:tco,score:scoreOffre(o,minPrix,minDelai,f)}; }).sort(function(a,b){return b.score-a.score;});
+  var best=scored[0];
+  var body='<p class="muted" style="margin-bottom:14px">Article : <b>'+Util.esc(art.nom)+'</b> · quantité '+c.qte+' · consultation du '+Util.date(c.date)+'</p>';
+  body+=C.table([
+    {t:"Fournisseur",r:function(r){return Util.esc(r.f.nom)+(r.f.homologue?"":' '+C.pill("non homol.","crit"))+(r.o.choisi?' '+C.pill("retenu","info"):"");}},
+    {t:"Prix unit.",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.o.prix)+'</span>';}},
+    {t:"Délai",num:true,r:function(r){return r.o.delai+" j";}},
+    {t:"TCO",num:true,r:function(r){return '<b class="mono">'+Util.fcfa(r.tco)+'</b>';}},
+    {t:"Note four.",num:true,r:function(r){return r.f.note;}},
+    {t:"Score",num:true,r:function(r){return '<span class="pill '+(r===best?"ok":"mut")+'">'+r.score+'/100</span>';}}
+  ],scored);
+  body+='<div style="margin-top:14px;padding:12px;border-radius:8px;background:var(--ok-bg)"><b>Recommandation IA :</b> retenir <b>'+Util.esc(best.f.nom)+'</b> (score '+best.score+'/100, TCO '+Util.fcfa(best.tco)+').';
+  var choisi=scored.filter(function(s){return s.o.choisi;})[0];
+  if(choisi && choisi!==best) body+=' <span style="color:var(--imp)">⚠ Offre retenue ('+Util.esc(choisi.f.nom)+') non optimale'+(c.justifChoix?" — justif. : "+Util.esc(c.justifChoix):" — sans justification")+'.</span>';
+  body+='</div>';
+  Modal.open("Comparateur d'offres — "+id,body,'<button class="btn ghost" data-mclose>Fermer</button>');
+}
+
+/* ============================================================
+   PARTIE 5 — COMMANDES FOURNISSEURS (+ matrice de délégation)
+   ============================================================ */
+App.views.commandes=function(){
+  var retard=DB.commandes.filter(function(c){return c.statut==="En retard";}).length;
+  var html='<div class="page-head"><h1>Commandes fournisseurs</h1><p>Suivi, conformité procédure et application de la matrice de délégation</p></div>';
+  html+='<div class="kpis">'+
+    C.kpi({label:"Commandes",val:DB.commandes.length,dim:"brand"})+
+    C.kpi({label:"En retard",val:retard,dim:"imp"})+
+    C.kpi({label:"Non validées",val:DB.commandes.filter(function(c){return !c.validee;}).length,dim:"warn"})+
+    C.kpi({label:"Sans consultation",val:DB.commandes.filter(function(c){return !c.consultee;}).length,dim:"info"})+
+    C.kpi({label:"Fourn. non homol.",val:DB.commandes.filter(function(c){return !c.homologue;}).length,dim:"crit"})+
+  '</div>';
+  html+='<div class="card"><div class="card-h"><h3>Commandes</h3><div class="sp"></div>'+
+    '<select class="input" id="cmdStatut" style="width:160px"><option value="">Tous statuts</option><option>En cours</option><option>Réceptionnée</option><option>Facturée</option><option>Soldée</option></select>'+
+    '<input class="input" id="cmdSearch" placeholder="Rechercher…" style="width:220px;margin-left:8px"></div>'+ApiFilters.bar("orders","Période commandes")+'<div class="card-b flush" id="cmdTable"></div></div>';
+  return html;
+};
+App.afterRender.commandes=function(){
+  var render=function(){ var q=(document.getElementById("cmdSearch").value||"").toLowerCase(); var st=document.getElementById("cmdStatut").value;
+    var rows=DB.commandes.filter(function(c){ var f=Seed.four(c.fournisseurId),a=Seed.art(c.articleId); var ok=(!q||c.id.toLowerCase().indexOf(q)>=0||f.nom.toLowerCase().indexOf(q)>=0||a.nom.toLowerCase().indexOf(q)>=0); if(st&&c.statut!==st) ok=false; return ok; });
+    document.getElementById("cmdTable").innerHTML=C.table([
+      {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>';}},
+      {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom);}},
+      {t:"Montant",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.montant)+'</span>';}},
+      {t:"Palier",r:function(r){var p=Seed.palierFor(r.montant);return C.pill(p.code,p.dbl?"imp":"mut");}},
+      {t:"Liv. prévue",r:function(r){return Util.date(r.livPrevue);}},
+      {t:"Statut",r:function(r){var m={"En retard":"crit","En cours":"info","Soldée":"ok","Validée":"ok"};return C.pill(r.statut,m[r.statut]||"mut");}},
+      {t:"Contrôle",r:function(r){return flagCell("Commande",r.id);}},
+      {t:"",r:function(r){return '<button class="btn ghost sm" data-cmd="'+r.id+'">Détail</button>';}}
+    ],rows);
+    document.querySelectorAll("[data-cmd]").forEach(function(b){ b.addEventListener("click",function(){ cmdDetail(b.getAttribute("data-cmd")); }); });
+  };
+  document.getElementById("cmdSearch").addEventListener("input",render);
+  document.getElementById("cmdStatut").addEventListener("change",render);
+  ApiFilters.bind("orders","orders",function(){ return {statut:document.getElementById("cmdStatut").value}; });
+  render();
+};
+function cmdDetail(id){
+  var c=DB.commandes.filter(function(x){return x.id===id;})[0]; var f=Seed.four(c.fournisseurId),a=Seed.art(c.articleId);
+  var p=Seed.palierFor(c.montant); var an=anomFor("Commande",id);
+  var body='<dl class="kv">'+
+    '<dt>Fournisseur</dt><dd>'+Util.esc(f.nom)+(f.homologue?"":' '+C.pill("non homologué","crit"))+'</dd>'+
+    '<dt>Article</dt><dd>'+Util.esc(a.nom)+'</dd>'+
+    '<dt>Quantité / PU</dt><dd>'+c.qte+' × '+Util.fcfa(c.pu)+'</dd>'+
+    '<dt>Montant total</dt><dd><b class="mono">'+Util.fcfa(c.montant)+'</b></dd>'+
+    '<dt>Demande liée</dt><dd>'+(c.daLiee||'<span class="pill warn">aucune</span>')+'</dd>'+
+    '<dt>Validée</dt><dd>'+(c.validee?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
+    '<dt>Consultation</dt><dd>'+(c.consultee?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
+    '</dl>';
+  body+='<div style="margin-top:16px;padding:12px;border-radius:8px;background:var(--bg)"><b style="font-size:12px">Matrice de délégation — palier '+p.code+'</b>'+
+    '<dl class="kv" style="margin-top:8px">'+
+    '<dt>Validation requise</dt><dd>'+Util.esc(p.valid)+'</dd>'+
+    '<dt>Consultations min.</dt><dd>'+p.consult+'</dd>'+
+    '<dt>Double validation</dt><dd>'+(p.dbl?"Oui":"Non")+'</dd>'+
+    '<dt>Commentaire oblig.</dt><dd>'+(p.comment?"Oui":"Non")+'</dd>'+
+    '<dt>Règle</dt><dd>'+Util.esc(p.note)+'</dd></dl></div>';
+  if(an.length){ body+='<div style="margin-top:16px"><b style="font-size:12px">Anomalies</b>'; an.forEach(function(x){ body+='<div style="margin-top:8px">'+C.prioPill(x.prio)+' '+Util.esc(x.msg)+'</div>'; }); body+='</div>'; }
+  Modal.open("Commande "+id,body,'<button class="btn ghost" data-mclose>Fermer</button>');
+}
+
+/* ============================================================
+   PARTIE 6 — RÉCEPTIONS
+   ============================================================ */
+App.views.receptions=function(){
+  var html='<div class="page-head"><h1>Contrôle des réceptions</h1><p>Rapprochement commande ↔ BL ↔ réception Sage</p></div>';
+  html+='<div class="kpis">'+
+    C.kpi({label:"Réceptions",val:DB.receptions.length,dim:"brand"})+
+    C.kpi({label:"Non contrôlées",val:DB.receptions.filter(function(r){return !r.controlee;}).length,dim:"warn"})+
+    C.kpi({label:"Non conformes",val:DB.receptions.filter(function(r){return !r.conforme;}).length,dim:"imp"})+
+    C.kpi({label:"Écarts quantité",val:DB.receptions.filter(function(r){return r.ecartQte;}).length,dim:"info"})+
+  '</div>';
+  html+='<div class="card"><div class="card-h"><h3>Réceptions</h3><div class="sp"></div>'+
+    '<select class="input" id="recFacturee" style="width:160px"><option value="">Toutes</option><option value="true">Facturée</option><option value="false">Non facturée</option></select>'+
+    '<input class="input" id="recSearch" placeholder="Rechercher…" style="width:200px;margin-left:8px"></div>'+ApiFilters.bar("receipts","Période réceptions")+'<div class="card-b flush" id="recTable"></div></div>';
+  return html;
+};
+App.afterRender.receptions=function(){
+  var render=function(){ var q=(document.getElementById("recSearch").value||"").toLowerCase(); var fa=document.getElementById("recFacturee").value;
+    var rows=DB.receptions.filter(function(r){ var f=Seed.four(r.fournisseurId); var ok=(!q||r.id.toLowerCase().indexOf(q)>=0||(f&&f.nom||"").toLowerCase().indexOf(q)>=0); if(fa==="true"&&!r.facturee) ok=false; if(fa==="false"&&r.facturee) ok=false; return ok; });
+    document.getElementById("recTable").innerHTML=C.table([
+    {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>';}},
+    {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom)||'-';}},
+    {t:"Qté",num:true,k:"qte"},
+    {t:"Montant HT",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.montant)+'</span>';}},
+    {t:"Date",r:function(r){return Util.date(r.date);}},
+    {t:"Arrivée",r:function(r){return r.dateArrivee?Util.date(r.dateArrivee):'-';}},
+    {t:"Facturée",r:function(r){return r.facturee?C.pill("Oui","ok"):C.pill("Non","warn");}},
+    {t:"Contrôle",r:function(r){return flagCell("Réception",r.id);}},
+    {t:"",r:function(r){return '<button class="btn ghost sm" data-rec="'+r.id+'">Détail</button>';}}
+  ],rows);
+    document.querySelectorAll("[data-rec]").forEach(function(b){ b.addEventListener("click",function(){ recDetail(b.getAttribute("data-rec")); }); });
+  };
+  document.getElementById("recSearch").addEventListener("input",render);
+  document.getElementById("recFacturee").addEventListener("change",render);
+  ApiFilters.bind("receipts","receipts",function(){ var v=document.getElementById("recFacturee").value; return {facturee:v==="true"?true:(v==="false"?false:"")}; });
+  render();
+};
+function recDetail(id){
+  var r=DB.receptions.filter(function(x){return x.id===id;})[0]; var f=Seed.four(r.fournisseurId);
+  var body='<dl class="kv">'+
+    '<dt>Fournisseur</dt><dd>'+Util.esc(f?f.nom:r.fournisseurId||'-')+'</dd>'+
+    '<dt>Qté</dt><dd>'+r.qte+'</dd>'+
+    '<dt>Montant HT</dt><dd><span class="mono">'+Util.fcfa(r.montant)+'</span></dd>'+
+    '<dt>Date</dt><dd>'+Util.date(r.date)+'</dd>'+
+    '<dt>Date arrivée</dt><dd>'+(r.dateArrivee?Util.date(r.dateArrivee):'-')+'</dd>'+
+    '<dt>Facturée</dt><dd>'+(r.facturee?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
+    '</dl>';
+  Modal.open("Réception "+id,body,'<button class="btn ghost" data-mclose>Fermer</button>');
+}
+
+/* ============================================================
+   PARTIE 7 — FACTURES (contrôle 3 voies)
+   ============================================================ */
+App.views.factures=function(){
+  var html='<div class="page-head"><h1>Contrôle des factures fournisseurs</h1><p>Rapprochement 3 voies : commande – réception – facture (avant paiement)</p></div>';
+  html+='<div class="kpis">'+
+    C.kpi({label:"Factures",val:DB.factures.length,dim:"brand"})+
+    C.kpi({label:"À contrôler",val:DB.factures.filter(function(f){return f.statut==="À contrôler";}).length,dim:"warn"})+
+    C.kpi({label:"Écarts de prix",val:DB.factures.filter(function(f){return f.ecartPrix;}).length,dim:"imp"})+
+    C.kpi({label:"Sans réception",val:DB.factures.filter(function(f){return f.sansReception;}).length,dim:"crit"})+
+    C.kpi({label:"Doublons",val:DB.factures.filter(function(f){return f.doublon;}).length,dim:"crit"})+
+  '</div>';
+  html+='<div class="card"><div class="card-h"><h3>Factures</h3><div class="sp"></div>'+
+    '<select class="input" id="facStatut" style="width:160px"><option value="">Tous statuts</option><option>À contrôler</option><option>Contrôlée</option><option>En anomalie</option><option>Validée</option></select>'+
+    '<select class="input" id="facConforme" style="width:160px;margin-left:8px"><option value="">Toutes</option><option value="ok">Conforme 3 voies</option><option value="nok">Écart 3 voies</option></select>'+
+    '<input class="input" id="facSearch" placeholder="Rechercher…" style="width:200px;margin-left:8px"></div>'+ApiFilters.bar("invoices","Période factures")+'<div class="card-b flush" id="facTable"></div></div>';
+  return html;
+};
+App.afterRender.factures=function(){
+  var render=function(){ var q=(document.getElementById("facSearch").value||"").toLowerCase(); var st=document.getElementById("facStatut").value; var cf=document.getElementById("facConforme").value;
+    var rows=DB.factures.filter(function(f){ var ok=(!q||f.num.toLowerCase().indexOf(q)>=0||Seed.four(f.fournisseurId).nom.toLowerCase().indexOf(q)>=0); if(st&&f.statut!==st) ok=false; if(cf){ var cok=!f.sansReception&&!f.ecartPrix&&!f.ecartQte&&!f.doublon; if(cf==="ok"&&!cok) ok=false; if(cf==="nok"&&cok) ok=false; } return ok; });
+    document.getElementById("facTable").innerHTML=C.table([
+      {t:"N° Facture",r:function(r){return '<b class="mono">'+Util.esc(r.num)+'</b>';}},
+      {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom);}},
+      {t:"Commande",k:"commandeId"},
+      {t:"HT",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.ht)+'</span>';}},
+      {t:"TTC",num:true,r:function(r){return '<b class="mono">'+Util.fcfa(r.ttc)+'</b>';}},
+      {t:"3 voies",r:function(r){return facMatch(r);}},
+      {t:"Contrôle",r:function(r){return flagCell("Facture",r.num);}},
+      {t:"",r:function(r){return '<button class="btn ghost sm" data-fac="'+r.id+'">Détail</button>';}}
+    ],rows);
+    document.querySelectorAll("[data-fac]").forEach(function(b){ b.addEventListener("click",function(){ facDetail(b.getAttribute("data-fac")); }); });
+  };
+  document.getElementById("facSearch").addEventListener("input",render);
+  document.getElementById("facStatut").addEventListener("change",render);
+  document.getElementById("facConforme").addEventListener("change",render);
+  ApiFilters.bind("invoices","invoices",function(){ var v=document.getElementById("facConforme").value; return {conforme:v==="ok"?true:(v==="nok"?false:"")}; });
+  render();
+};
+function facMatch(f){
+  var ok = !f.sansReception && !f.ecartPrix && !f.ecartQte && !f.doublon;
+  return ok ? C.pill("✓ Rapproché","ok") : C.pill("✗ Écart","crit");
+}
+function facDetail(id){
+  var f=DB.factures.filter(function(x){return x.id===id;})[0]; var c=DB.commandes.filter(function(x){return x.id===f.commandeId;})[0];
+  var body='<dl class="kv">'+
+    '<dt>Fournisseur</dt><dd>'+Util.esc(Seed.four(f.fournisseurId).nom)+'</dd>'+
+    '<dt>Commande</dt><dd>'+(f.commandeId||"—")+' · PU cmd '+(c?Util.fcfa(c.pu):"—")+'</dd>'+
+    '<dt>Réception</dt><dd>'+(f.receptionId||'<span class="pill crit">aucune</span>')+'</dd>'+
+    '<dt>Qté / PU facturés</dt><dd>'+f.qteFact+' × '+Util.fcfa(f.puFact)+'</dd>'+
+    '<dt>Montant HT</dt><dd><span class="mono">'+Util.fcfa(f.ht)+'</span></dd>'+
+    '<dt>TVA ('+Util.pct(f.tauxTva*100)+')</dt><dd><span class="mono">'+Util.fcfa(f.tva)+'</span></dd>'+
+    '<dt>Transport</dt><dd><span class="mono">'+Util.fcfa(f.transport)+'</span></dd>'+
+    '<dt>TTC</dt><dd><b class="mono">'+Util.fcfa(f.ttc)+'</b></dd>'+
+    '<dt>Échéance</dt><dd>'+Util.date(f.echeance)+'</dd></dl>';
+  var an=anomFor("Facture",f.num);
+  body+='<div style="margin-top:16px;padding:12px;border-radius:8px;background:'+(an.length?"var(--crit-bg)":"var(--ok-bg)")+'"><b>Contrôle 3 voies : </b>'+(an.length?"écarts détectés — paiement à bloquer":"rapprochement conforme — paiement autorisé")+'</div>';
+  if(an.length){ an.forEach(function(x){ body+='<div style="margin-top:8px">'+C.prioPill(x.prio)+' '+Util.esc(x.msg)+'</div>'; }); }
+  Modal.open("Facture "+Util.esc(f.num),body,'<button class="btn ghost" data-mclose>Fermer</button>');
+}
+</script>
+<script>
+/* ============================================================
+   PARTIE 8 — STOCKS & SÉCURITÉ + MRP / RÉAPPRO
+   ============================================================ */
+App.views.stocks=function(){
+  var rupt=DB.articles.filter(function(a){return a.stock<=0;}).length;
+  var secu=DB.articles.filter(function(a){return a.stock>0&&a.stock<a.secu;}).length;
+  var html='<div class="page-head"><h1>Stocks & seuils de sécurité</h1><p>Surveillance des niveaux et des besoins de réapprovisionnement</p></div>';
+  html+='<div class="kpis">'+
+    C.kpi({label:"Articles suivis",val:DB.articles.length,dim:"brand"})+
+    C.kpi({label:"Ruptures",val:rupt,dim:"crit",go:"mrp"})+
+    C.kpi({label:"Sous seuil sécurité",val:secu,dim:"imp",go:"mrp"})+
+    C.kpi({label:"Articles critiques",val:DB.articles.filter(function(a){return a.critique;}).length,dim:"warn"})+
+    C.kpi({label:"En transit",val:DB.articles.filter(function(a){return a.transit>0;}).length,dim:"info"})+
+  '</div>';
+  html+='<div class="card"><div class="card-h"><h3>État des stocks</h3><div class="sp"></div>'+
+    '<select class="input" id="stkFamille" style="width:140px"><option value="">Toutes familles</option></select>'+
+    '<input class="input" id="stkSearch" placeholder="Rechercher…" style="width:180px;margin-left:8px">'+
+    '<div class="seg" id="stkSeg" style="margin-left:8px"><button class="on" data-f="all">Tous</button><button data-f="alert">Sous seuil</button><button data-f="crit">Critiques</button></div></div>'+
+    '<div class="card-b flush" id="stkTable"></div></div>';
+  return html;
+};
+App.afterRender.stocks=function(){
+  var filt="all";
+  var famSel=document.getElementById("stkFamille");
+  var fams=[]; DB.articles.forEach(function(a){ if(fams.indexOf(a.famille)<0) fams.push(a.famille); });
+  fams.sort().forEach(function(f){ famSel.innerHTML+='<option>'+Util.esc(f)+'</option>'; });
+  var render=function(){
+    var q=(document.getElementById("stkSearch").value||"").toLowerCase();
+    var fa=famSel.value;
+    var rows=DB.articles.filter(function(a){ var ok=true; if(filt==="alert") ok=a.stock<a.secu; if(filt==="crit") ok=a.critique; if(fa&&a.famille!==fa) ok=false; if(q&&(a.nom.toLowerCase().indexOf(q)<0&&a.code.toLowerCase().indexOf(q)<0)) ok=false; return ok; });
+    document.getElementById("stkTable").innerHTML=C.table([
+      {t:"Article",r:function(a){return Util.esc(a.nom)+(a.critique?' '+C.pill("critique","warn"):"");}},
+      {t:"Famille",k:"famille"},
+      {t:"Stock",num:true,r:function(a){var col=a.stock<=0?"crit":a.stock<a.secu?"imp":"ok";return '<span class="pill '+col+'">'+a.stock+'</span>';}},
+      {t:"Sécurité",num:true,k:"secu"},
+      {t:"Transit",num:true,k:"transit"},
+      {t:"Conso/mois",num:true,k:"consoMoy"},
+      {t:"Couverture",r:function(a){var c=a.consoMoy?Math.round(a.stock/a.consoMoy*30):0;return C.bar(Math.min(100,c/a.delaiAppro*100),c<a.delaiAppro?"var(--crit)":"var(--ok)")+'<small class="muted">'+c+' j vs délai '+a.delaiAppro+' j</small>';}}
+    ],rows);
+  };
+  document.querySelectorAll("#stkSeg button").forEach(function(b){ b.addEventListener("click",function(){ document.querySelectorAll("#stkSeg button").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); filt=b.getAttribute("data-f"); render(); }); });
+  famSel.addEventListener("change",render);
+  document.getElementById("stkSearch").addEventListener("input",render);
+  render();
+};
+
+/* --- MRP : moteur de recommandation --- */
+function mrpNeeds(){
+  return DB.articles.map(function(a){
+    var dispo=a.stock+a.transit+a.enCmd-a.reserve;
+    var pointCmd=a.secu+Math.round(a.consoMoy/30*a.delaiAppro);
+    var besoin=pointCmd-dispo;
+    var f=Seed.four(a.fournisseurPref);
+    var couvre=a.consoMoy?Math.round(a.stock/a.consoMoy*30):999;
+    var prio = a.stock<=0?"crit": dispo<a.secu?"imp": besoin>0?"warn":"info";
+    return { art:a, dispo:dispo, pointCmd:pointCmd, qteReco:besoin>0?Math.max(besoin,a.min):0,
+      besoin:besoin, four:f, prio:prio, couvre:couvre,
+      dateReco: besoin>0?(function(){var d=new Date();d.setDate(d.getDate()+Math.max(0,couvre-a.delaiAppro));return d.toISOString().slice(0,10);})():null };
+  }).filter(function(x){return x.qteReco>0;}).sort(function(a,b){return PRIO_RANK[b.prio]-PRIO_RANK[a.prio];});
+}
+App.views.mrp=function(){
+  var needs=mrpNeeds();
+  var html='<div class="page-head"><h1>MRP / Aide au réapprovisionnement</h1><p>Anticiper les besoins — articles à commander, quantités et dates recommandées</p></div>';
+  html+='<div class="kpis">'+
+    C.kpi({label:"Articles à commander",val:needs.length,dim:"brand"})+
+    C.kpi({label:"Urgents (rupture)",val:needs.filter(function(n){return n.prio==="crit";}).length,dim:"crit"})+
+    C.kpi({label:"Risque rupture",val:needs.filter(function(n){return n.prio==="imp";}).length,dim:"imp"})+
+    C.kpi({label:"Valeur réappro",val:Util.num(Math.round(needs.reduce(function(s,n){return s+n.qteReco*n.art.pu;},0)/1000000))+" M",sub:"FCFA",dim:"ok"})+
+  '</div>';
+  html+='<div class="card"><div class="card-h"><h3>Propositions de réapprovisionnement</h3></div><div class="card-b flush">';
+  html+=C.table([
+    {t:"Prio",r:function(n){return C.prioPill(n.prio);}},
+    {t:"Article",r:function(n){return Util.esc(n.art.nom);}},
+    {t:"Dispo",num:true,r:function(n){return n.dispo;}},
+    {t:"Pt cmd",num:true,r:function(n){return n.pointCmd;}},
+    {t:"Qté reco.",num:true,r:function(n){return '<b class="mono">'+n.qteReco+'</b>';}},
+    {t:"Date reco.",r:function(n){return n.dateReco?Util.date(n.dateReco):"—";}},
+    {t:"Fournisseur",r:function(n){return Util.esc(n.four.nom)+(n.four.homologue?"":' '+C.pill("non homol.","crit"));}},
+    {t:"Montant",num:true,r:function(n){return '<span class="mono">'+Util.fcfa(n.qteReco*n.art.pu)+'</span>';}}
+  ],needs);
+  html+='</div></div>';
+  return html;
+};
+</script>
+<script>
+/* ============================================================
+   PARTIE 9 — ANALYSES (fournisseurs / prix / acheteurs / budget)
+   ============================================================ */
+App.views.analyses=function(){
+  var html='<div class="page-head"><h1>Analyses achats</h1><p>Scoring fournisseurs, prix d\'achat, performance acheteurs, budgets</p></div>';
+  html+='<div class="seg" id="anSeg" style="margin-bottom:16px">'+
+    '<button class="on" data-t="four">Fournisseurs</button><button data-t="prix">Prix</button>'+
+    '<button data-t="ach">Acheteurs</button><button data-t="bud">Budgets</button></div>';
+  html+='<div id="anBody"></div>';
+  return html;
+};
+App.afterRender.analyses=function(){
+  var render=function(t){
+    var b=document.getElementById("anBody");
+    if(t==="four"){
+      var rows=DB.fournisseurs.slice().sort(function(a,b){return b.note-a.note;});
+      var rmap={fiable:"ok","surveiller":"warn",risque:"imp",remplacer:"crit"};
+      b.innerHTML='<div class="card"><div class="card-b flush">'+C.table([
+        {t:"Fournisseur",r:function(f){return Util.esc(f.nom);}},
+        {t:"Catégorie",k:"categorie"},
+        {t:"Note",num:true,r:function(f){return '<span class="pill '+(f.note>85?"ok":f.note>70?"warn":"crit")+'">'+f.note+'/100</span>';}},
+        {t:"Délai moy.",num:true,r:function(f){return f.delaiMoyen+" j";}},
+        {t:"Conformité",num:true,r:function(f){return Util.pct(f.tauxConf);}},
+        {t:"Retards",num:true,k:"retards"},
+        {t:"Classement",r:function(f){return C.pill(f.risque,rmap[f.risque]||"mut");}},
+        {t:"Homologué",r:function(f){return f.homologue?C.pill("Oui","ok"):C.pill("Non","crit");}}
+      ],rows)+'</div></div>';
+    } else if(t==="prix"){
+      var rows=DB.articles.map(function(a){ var ecart=(a.pu-a.puStd)/a.puStd*100; return {a:a,ecart:ecart}; }).sort(function(x,y){return y.ecart-x.ecart;});
+      b.innerHTML='<div class="card"><div class="card-h"><h3>Prix d\'achat vs prix standard</h3></div><div class="card-b flush">'+C.table([
+        {t:"Article",r:function(r){return Util.esc(r.a.nom);}},
+        {t:"PU actuel",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.a.pu)+'</span>';}},
+        {t:"PU standard",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.a.puStd)+'</span>';}},
+        {t:"Écart",num:true,r:function(r){var c=r.ecart>10?"crit":r.ecart>3?"imp":r.ecart<-3?"ok":"mut";return C.pill((r.ecart>0?"+":"")+r.ecart.toFixed(1)+"%",c);}},
+        {t:"Tendance",r:function(r){return C.spark([3,5,4,6,5,7,r.ecart>5?9:5].map(function(v){return v+Math.random()*2;}));}}
+      ],rows)+'</div></div>';
+    } else if(t==="ach"){
+      var rows=DB.acheteurs.map(function(name){
+        var cmds=DB.commandes.filter(function(c){return c.acheteur===name;});
+        var ret=cmds.filter(function(c){return c.statut==="En retard";}).length;
+        var anos=Anomalies.all().filter(function(a){return false;}).length;
+        var taux=cmds.length?Math.round(ret/cmds.length*100):0;
+        var note=Math.max(20,100-taux*1.5-Math.round(Math.random()*15));
+        return {name:name,cmds:cmds.length,ret:ret,taux:taux,note:note,
+          eco:Math.round(Math.random()*4000000),dossiers:Math.round(70+Math.random()*30)};
+      }).sort(function(a,b){return b.note-a.note;});
+      b.innerHTML='<div class="card"><div class="card-h"><h3>Performance des acheteurs</h3></div><div class="card-b flush">'+C.table([
+        {t:"Acheteur",r:function(r){return '<b>'+Util.esc(r.name)+'</b>';}},
+        {t:"Commandes",num:true,k:"cmds"},
+        {t:"En retard",num:true,r:function(r){return r.ret+' ('+r.taux+'%)';}},
+        {t:"Dossiers complets",num:true,r:function(r){return Util.pct(r.dossiers);}},
+        {t:"Économies",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.eco)+'</span>';}},
+        {t:"Note",num:true,r:function(r){return '<span class="pill '+(r.note>80?"ok":r.note>60?"warn":"crit")+'">'+r.note+'/100</span>';}}
+      ],rows)+'</div></div>';
+    } else {
+      var rows=DB.budgets.slice().sort(function(a,b){return (b.realise/b.alloue)-(a.realise/a.alloue);});
+      b.innerHTML='<div class="card"><div class="card-h"><h3>Budgets achats par service</h3></div><div class="card-b flush">'+C.table([
+        {t:"Service",k:"service"},
+        {t:"Alloué",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.alloue)+'</span>';}},
+        {t:"Réalisé",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.realise)+'</span>';}},
+        {t:"Engagé",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.engage)+'</span>';}},
+        {t:"Consommation",r:function(r){var p=r.realise/r.alloue*100;return C.bar(p,p>100?"var(--crit)":p>85?"var(--warn)":"var(--ok)")+'<small class="muted">'+p.toFixed(0)+'%</small>';}},
+        {t:"Statut",r:function(r){return r.depasse?C.pill("Dépassé","crit"):C.pill("OK","ok");}}
+      ],rows)+'</div></div>';
+    }
+  };
+  document.querySelectorAll("#anSeg button").forEach(function(btn){ btn.addEventListener("click",function(){ document.querySelectorAll("#anSeg button").forEach(function(x){x.classList.remove("on");}); btn.classList.add("on"); render(btn.getAttribute("data-t")); }); });
+  render("four");
+};
+</script>
+<script>
+/* ============================================================
+   PARTIE 10 (vues) — ANOMALIES & ABUS · VALIDATIONS · ALERTES
+   ============================================================ */
+App.views.anomalies=function(){
+  var an=Anomalies.all();
+  var html='<div class="page-head"><h1>Anomalies & abus</h1><p>Moteur transversal de contrôle interne — détection sur tout le cycle achat</p></div>';
+  html+='<div class="kpis">'+
+    ["crit","imp","warn","info"].map(function(p){
+      return C.kpi({label:PRIO_LABEL[p],val:an.filter(function(a){return a.prio===p;}).length,dim:p});
+    }).join("")+'</div>';
+  var cats=[]; an.forEach(function(a){ if(cats.indexOf(a.cat)<0)cats.push(a.cat); });
+  html+='<div class="card"><div class="card-h"><h3>Détail des anomalies</h3><div class="sp"></div>'+
+    '<select class="input" id="anCat" style="width:200px"><option value="">Toutes catégories</option>'+
+    cats.map(function(c){return '<option>'+Util.esc(c)+'</option>';}).join("")+'</select>'+
+    '<select class="input" id="anPrio" style="width:160px"><option value="">Toutes priorités</option>'+
+    ["crit","imp","warn","info"].map(function(p){return '<option value="'+p+'">'+PRIO_LABEL[p]+'</option>';}).join("")+'</select>'+
+    '</div><div class="card-b flush" id="anTable"></div></div>';
+  return html;
+};
+App.afterRender.anomalies=function(){
+  var render=function(){
+    var cat=document.getElementById("anCat").value, prio=document.getElementById("anPrio").value;
+    var rows=Anomalies.all().filter(function(a){return (!cat||a.cat===cat)&&(!prio||a.prio===prio);})
+      .sort(function(a,b){return PRIO_RANK[b.prio]-PRIO_RANK[a.prio];});
+    document.getElementById("anTable").innerHTML=C.table([
+      {t:"Priorité",r:function(a){return C.prioPill(a.prio);}},
+      {t:"Catégorie",k:"cat"},
+      {t:"Objet",r:function(a){return Util.esc(a.objet)+' '+'<span class="mono muted">'+Util.esc(a.ref)+'</span>';}},
+      {t:"Anomalie",r:function(a){return Util.esc(a.msg);}}
+    ],rows);
+  };
+  document.getElementById("anCat").addEventListener("change",render);
+  document.getElementById("anPrio").addEventListener("change",render);
+  render();
+};
+
+App.views.validations=function(){
+  var html='<div class="page-head"><h1>Contrôle des validations</h1><p>Qui a validé quoi, quand, à quel niveau, avec quelle justification — vs matrice de délégation</p></div>';
+  var nonConf=DB.validations.filter(function(v){return !v.justif||!v.habilite;}).length;
+  html+='<div class="kpis">'+
+    C.kpi({label:"Validations",val:DB.validations.length,dim:"brand"})+
+    C.kpi({label:"Sans justificatif",val:DB.validations.filter(function(v){return !v.justif;}).length,dim:"imp"})+
+    C.kpi({label:"Non habilité",val:DB.validations.filter(function(v){return !v.habilite;}).length,dim:"crit"})+
+    C.kpi({label:"Trop rapides",val:DB.validations.filter(function(v){return v.rapide;}).length,dim:"warn"})+
+  '</div>';
+  html+='<div class="card"><div class="card-b flush">'+C.table([
+    {t:"Réf",r:function(v){return '<b class="mono">'+v.id+'</b>';}},
+    {t:"Objet",r:function(v){return Util.esc(v.objet);}},
+    {t:"Valideur",k:"valideur"},
+    {t:"Montant",num:true,r:function(v){return '<span class="mono">'+Util.fcfa(v.montant)+'</span>';}},
+    {t:"Palier réel",r:function(v){var p=Seed.palierFor(v.montant);return C.pill(p.code,p.dbl?"imp":"mut");}},
+    {t:"Double contrôle",r:function(v){return v.doubleControle?C.pill("Oui","ok"):C.pill("Non","warn");}},
+    {t:"Conformité",r:function(v){var p=Seed.palierFor(v.montant);var ok=v.justif&&v.habilite&&(!p.dbl||v.doubleControle)&&(!p.comment||v.commentaire);return ok?C.pill("Conforme","ok"):C.pill("Non conforme","crit");}}
+  ],DB.validations)+'</div></div>';
+  return html;
+};
+
+App.views.alertes=function(){
+  var html='<div class="page-head"><h1>Centre d\'alertes</h1><p>Alertes automatiques classées par priorité — traitement et suivi</p></div>';
+  var list=Alerts.all();
+  html+='<div class="kpis">'+
+    ["crit","imp","warn","info"].map(function(p){ return C.kpi({label:PRIO_LABEL[p],val:list.filter(function(a){return a.prio===p&&!a.done;}).length,dim:p}); }).join("")+
+    C.kpi({label:"Traitées",val:list.filter(function(a){return a.done;}).length,dim:"ok"})+'</div>';
+  html+='<div class="card"><div class="card-h"><h3>Alertes</h3><div class="sp"></div>'+
+    '<div class="seg" id="alSeg"><button class="on" data-f="open">Ouvertes</button><button data-f="all">Toutes</button><button data-f="done">Traitées</button></div></div>'+
+    '<div class="card-b flush" id="alTable"></div></div>';
+  return html;
+};
+App.afterRender.alertes=function(){
+  var filt="open";
+  var render=function(){
+    var rows=Alerts.all().filter(function(a){ if(filt==="open")return !a.done; if(filt==="done")return a.done; return true; });
+    document.getElementById("alTable").innerHTML=C.table([
+      {t:"Priorité",r:function(a){return C.prioPill(a.prio);}},
+      {t:"Catégorie",k:"cat"},
+      {t:"Objet",r:function(a){return Util.esc(a.objet)+' <span class="mono muted">'+Util.esc(a.ref)+'</span>';}},
+      {t:"Alerte",r:function(a){return Util.esc(a.msg);}},
+      {t:"Statut",r:function(a){return a.done?C.pill("Traitée","ok"):C.pill("Ouverte","warn");}},
+      {t:"",r:function(a){ if(Auth.readonly()) return ""; return '<button class="btn ghost sm" data-al="'+a.id+'">'+(a.done?"Rouvrir":"Traiter")+'</button>';}}
+    ],rows);
+    document.querySelectorAll("[data-al]").forEach(function(b){ b.addEventListener("click",function(){ Alerts.toggle(b.getAttribute("data-al")); render(); Boot.refreshAlertBadges(); toast("Alerte mise à jour","ok"); }); });
+  };
+  document.querySelectorAll("#alSeg button").forEach(function(b){ b.addEventListener("click",function(){ document.querySelectorAll("#alSeg button").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); filt=b.getAttribute("data-f"); render(); }); });
+  render();
+};
+</script>
+<script>
+/* ============================================================
+   PARTIE 11 — DOCUMENTS · JOURNAL · EXPORTS AUDIT
+   ============================================================ */
+App.views.documents=function(){
+  var html='<div class="page-head"><h1>Documents scannés & pièces justificatives</h1><p>Rapprochement document ↔ Sage X3 et détection d\'incohérences</p></div>';
+  html+='<div class="kpis">'+
+    C.kpi({label:"Documents",val:DB.documents.length,dim:"brand"})+
+    C.kpi({label:"Rapprochés",val:DB.documents.filter(function(d){return d.rapproche;}).length,dim:"ok"})+
+    C.kpi({label:"Incohérents",val:DB.documents.filter(function(d){return !d.coherent;}).length,dim:"imp"})+
+  '</div>';
+  html+='<div class="card"><div class="card-b flush">'+C.table([
+    {t:"Réf",r:function(d){return '<b class="mono">'+d.id+'</b>';}},
+    {t:"Type",k:"type"},
+    {t:"Fournisseur",r:function(d){return Util.esc(Seed.four(d.fournisseurId).nom);}},
+    {t:"N° document",r:function(d){return '<span class="mono">'+Util.esc(d.numero)+'</span>';}},
+    {t:"Date",r:function(d){return Util.date(d.date);}},
+    {t:"Lien Sage",r:function(d){return d.lieRef||C.pill("non lié","warn");}},
+    {t:"Cohérence",r:function(d){return d.coherent?C.pill("Cohérent","ok"):C.pill("Incohérent","imp");}}
+  ],DB.documents)+'</div></div>';
+  return html;
+};
+
+App.views.journal=function(){
+  if(!Journal.all().length){
+    Journal.log("Connexion","Session","Profil "+(App.state.user?App.state.user.name:""));
+    Journal.log("Consultation","Tableau de bord");
+  }
+  var html='<div class="page-head"><h1>Journal d\'activité</h1><p>Traçabilité : qui a fait quoi, quand, sur quel objet</p></div>';
+  html+='<div class="card"><div class="card-b flush">'+C.table([
+    {t:"Horodatage",r:function(j){return '<span class="mono">'+new Date(j.ts).toLocaleString("fr-FR")+'</span>';}},
+    {t:"Utilisateur",k:"user"},
+    {t:"Action",r:function(j){return C.pill(j.action,"info");}},
+    {t:"Objet",k:"objet"},
+    {t:"Détail",r:function(j){return Util.esc(j.detail);}}
+  ],Journal.all())+'</div></div>';
+  return html;
+};
+
+function toCSV(rows){
+  if(!rows.length) return "";
+  var keys=Object.keys(rows[0]);
+  var esc=function(v){ v=(v===null||v===undefined)?"":String(v); return '"'+v.replace(/"/g,'""')+'"'; };
+  return keys.join(";")+"\n"+rows.map(function(r){ return keys.map(function(k){return esc(r[k]);}).join(";"); }).join("\n");
+}
+function download(name,content,mime){
+  var blob=new Blob(["\ufeff"+content],{type:mime||"text/csv;charset=utf-8"});
+  var url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=name; a.click(); setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+var EXPORTS={
+  fournisseurs:function(){return DB.fournisseurs.map(function(f){return {id:f.id,nom:f.nom,niu:f.niu,note:f.note,risque:f.risque,homologue:f.homologue?"oui":"non",delai:f.delaiMoyen,conformite:f.tauxConf};});},
+  commandes:function(){return DB.commandes.map(function(c){return {ref:c.id,fournisseur:Seed.four(c.fournisseurId).nom,article:Seed.art(c.articleId).nom,qte:c.qte,pu:c.pu,montant:c.montant,statut:c.statut,validee:c.validee?"oui":"non",palier:Seed.palierFor(c.montant).code};});},
+  factures:function(){return DB.factures.map(function(f){return {num:f.num,fournisseur:Seed.four(f.fournisseurId).nom,ht:f.ht,tva:f.tva,ttc:f.ttc,statut:f.statut,ecartPrix:f.ecartPrix?"oui":"non",sansReception:f.sansReception?"oui":"non"};});},
+  anomalies:function(){return Anomalies.all().map(function(a){return {priorite:PRIO_LABEL[a.prio],categorie:a.cat,objet:a.objet,ref:a.ref,anomalie:a.msg};});},
+  validations:function(){return DB.validations.map(function(v){return {ref:v.id,objet:v.objet,valideur:v.valideur,montant:v.montant,palier:Seed.palierFor(v.montant).code,justif:v.justif?"oui":"non",doubleControle:v.doubleControle?"oui":"non"};});},
+  budgets:function(){return DB.budgets.map(function(b){return {service:b.service,alloue:b.alloue,realise:b.realise,engage:b.engage,depasse:b.depasse?"oui":"non"};});},
+  journal:function(){return Journal.all().map(function(j){return {horodatage:j.ts,utilisateur:j.user,action:j.action,objet:j.objet,detail:j.detail};});}
+};
+App.views.exports=function(){
+  var html='<div class="page-head"><h1>Exports pour audit</h1><p>Extraction des données par thème — formats Excel/CSV et PDF (impression)</p></div>';
+  var items=[
+    {k:"fournisseurs",t:"Audit fournisseurs",ic:"🏭"},{k:"commandes",t:"Audit commandes",ic:"📦"},
+    {k:"factures",t:"Audit factures",ic:"🧾"},{k:"anomalies",t:"Audit anomalies & abus",ic:"⚠"},
+    {k:"validations",t:"Audit validations",ic:"✔"},{k:"budgets",t:"Audit budgets",ic:"💰"},
+    {k:"journal",t:"Audit traçabilité",ic:"📜"}
+  ];
+  html+='<div class="kpis">';
+  items.forEach(function(it){
+    html+='<div class="kpi dim-brand"><div class="lbl">'+it.ic+' '+Util.esc(it.t)+'</div>'+
+      '<div class="sub" style="margin:8px 0 12px">'+EXPORTS[it.k]().length+' lignes</div>'+
+      '<button class="btn ghost sm" data-exp="'+it.k+'">⬇ CSV / Excel</button> '+
+      '<button class="btn ghost sm" data-pdf="'+it.k+'">🖨 PDF</button></div>';
+  });
+  html+='</div>';
+  html+='<div class="card"><div class="card-b"><p class="muted">Les exports CSV s\'ouvrent dans Excel (séparateur « ; », encodage UTF-8). Le bouton PDF lance l\'impression du tableau (Enregistrer au format PDF).</p></div></div>';
+  return html;
+};
+App.afterRender.exports=function(){
+  document.querySelectorAll("[data-exp]").forEach(function(b){ b.addEventListener("click",function(){ var k=b.getAttribute("data-exp"); download("audit_"+k+"_"+Util.today()+".csv",toCSV(EXPORTS[k]())); Journal.log("Export",k,EXPORTS[k]().length+" lignes"); toast("Export "+k+" généré","ok"); }); });
+  document.querySelectorAll("[data-pdf]").forEach(function(b){ b.addEventListener("click",function(){ var k=b.getAttribute("data-pdf"); var rows=EXPORTS[k](); var w=window.open("","_blank"); var cols=Object.keys(rows[0]||{}); var h='<h2>Audit '+k+' — '+Util.date(Util.today())+'</h2><table border=1 cellspacing=0 cellpadding=6 style="border-collapse:collapse;font-family:sans-serif;font-size:12px"><tr>'+cols.map(function(c){return '<th>'+c+'</th>';}).join("")+'</tr>'+rows.map(function(r){return '<tr>'+cols.map(function(c){return '<td>'+Util.esc(r[c])+'</td>';}).join("")+'</tr>';}).join("")+'</table>'; w.document.write(h); w.document.close(); w.print(); Journal.log("Export PDF",k); }); });
+};
+</script>
+<script>
+/* ============================================================
+   PARTIE 12 — AGENT IA + PARAMÈTRES (matrice de délégation)
+   ============================================================ */
+
+/* --- Agent IA : fallback local + branchement n8n / Anthropic --- */
+var IA = {
+  cfg:function(){ return Store.get("iaCfg",{webhook:"",useAnthropic:false}); },
+  setCfg:function(c){ Store.set("iaCfg",c); },
+  suggestions:[
+    "Quelles commandes fournisseurs sont en retard ?",
+    "Quels articles risquent d'être en rupture ?",
+    "Quel fournisseur propose le meilleur prix ?",
+    "Quels fournisseurs posent le plus de problèmes ?",
+    "Quelles factures présentent des écarts ?",
+    "Y a-t-il des achats suspects dans Sage X3 ?",
+    "Quels budgets achats sont dépassés ?",
+    "Quelles actions traiter en urgence ?",
+    "Synthèse du jour"
+  ],
+  /* moteur local d'analyse */
+  answer:function(q){
+    var t=q.toLowerCase();
+    var H=function(title,lines){ return "**"+title+"**\n"+lines.join("\n"); };
+    if(/retard.*command|command.*retard/.test(t)){
+      var r=DB.commandes.filter(function(c){return c.statut==="En retard";});
+      return H(r.length+" commande(s) en retard :", r.slice(0,8).map(function(c){return "• "+c.id+" — "+Seed.four(c.fournisseurId).nom+" — liv. prévue "+Util.date(c.livPrevue);}));
+    }
+    if(/rupture|stock/.test(t)){
+      var ru=DB.articles.filter(function(a){return a.stock<=0;}), ss=DB.articles.filter(function(a){return a.stock>0&&a.stock<a.secu;});
+      return H("Risques de stock :",["• Ruptures : "+ru.length+" article(s) — "+ru.slice(0,5).map(function(a){return a.nom;}).join(", ")]
+        .concat(["• Sous seuil de sécurité : "+ss.length+" article(s)"]).concat(["→ Voir module MRP pour les réapprovisionnements recommandés."]));
+    }
+    if(/meilleur prix|moins cher|negoci/.test(t)){
+      var lines=DB.consultations.slice(0,5).map(function(c){var o=c.offres[0];return "• "+Seed.art(c.articleId).nom+" : "+Seed.four(o.fournisseurId).nom+" à "+Util.fcfa(o.prix);});
+      return H("Meilleures offres par consultation :",lines);
+    }
+    if(/probleme|risque.*fournisseur|fournisseur.*risque|fiable/.test(t)){
+      var fr=DB.fournisseurs.slice().sort(function(a,b){return a.note-b.note;}).slice(0,5);
+      return H("Fournisseurs à surveiller (note la plus basse) :",fr.map(function(f){return "• "+f.nom+" — note "+f.note+"/100 — "+f.risque+(f.homologue?"":" (non homologué)");}));
+    }
+    if(/facture.*ecart|ecart.*facture|facture/.test(t)){
+      var fe=DB.factures.filter(function(f){return f.ecartPrix||f.ecartQte||f.sansReception||f.doublon;});
+      return H(fe.length+" facture(s) en écart :",fe.slice(0,8).map(function(f){return "• "+f.num+" — "+Seed.four(f.fournisseurId).nom+" — "+(f.sansReception?"sans réception":f.doublon?"doublon":f.ecartPrix?"écart de prix":"écart de quantité");}));
+    }
+    if(/suspect|abus|fraude|anormal/.test(t)){
+      var ab=Anomalies.byCat("Abus");
+      return H(ab.length+" opération(s) suspecte(s) dans Sage X3 :",ab.slice(0,8).map(function(a){return "• ["+PRIO_LABEL[a.prio]+"] "+a.msg;}));
+    }
+    if(/budget/.test(t)){
+      var bd=DB.budgets.filter(function(b){return b.depasse;});
+      return H(bd.length+" budget(s) dépassé(s) :",bd.map(function(b){return "• "+b.service+" — réalisé "+Util.fcfa(b.realise)+" / alloué "+Util.fcfa(b.alloue)+" ("+Math.round(b.realise/b.alloue*100)+"%)";}));
+    }
+    if(/urgen|action|prioritaire/.test(t)){
+      var cr=Anomalies.byPrio("crit");
+      return H(cr.length+" action(s) critique(s) à traiter :",cr.slice(0,8).map(function(a){return "• "+a.objet+" "+a.ref+" — "+a.msg;}));
+    }
+    if(/synth|resume|rapport|jour/.test(t)){
+      var an=Anomalies.all();
+      return H("Synthèse du jour — "+Util.date(Util.today()),[
+        "• Anomalies : "+an.filter(function(a){return a.prio==="crit";}).length+" critiques, "+an.filter(function(a){return a.prio==="imp";}).length+" importantes",
+        "• Demandes en attente : "+DB.demandes.filter(function(d){return d.statut==="En attente";}).length,
+        "• Commandes en retard : "+DB.commandes.filter(function(c){return c.statut==="En retard";}).length,
+        "• Factures à contrôler : "+DB.factures.filter(function(f){return f.statut==="À contrôler";}).length,
+        "• Ruptures de stock : "+DB.articles.filter(function(a){return a.stock<=0;}).length,
+        "→ Recommandation : traiter en priorité les fournisseurs non homologués et les factures sans réception."]);
+    }
+    return "Je peux analyser : demandes/commandes en retard, ruptures et réappro (MRP), meilleurs prix, fiabilité fournisseurs, écarts de factures, achats suspects, budgets dépassés et actions urgentes. Reformulez ou utilisez une suggestion ci-dessus.";
+  }
+};
+App.views.ia=function(){
+  var cfg=IA.cfg();
+  var html='<div class="page-head"><h1>Agent IA achats</h1><p>Assistant connecté aux données — fallback local '+(cfg.webhook?"+ n8n actif":"(n8n non configuré)")+'</p></div>';
+  html+='<div class="card" style="height:calc(100vh - 230px);display:flex;flex-direction:column">'+
+    '<div class="card-b" id="iaLog" style="flex:1;overflow-y:auto"></div>'+
+    '<div style="padding:10px 16px;border-top:1px solid var(--line)">'+
+      '<div id="iaSugg" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>'+
+      '<div class="flex"><input class="input" id="iaInput" placeholder="Posez votre question sur les achats…"><button class="btn primary" id="iaSend">Envoyer</button></div>'+
+    '</div></div>';
+  return html;
+};
+App.afterRender.ia=function(){
+  var log=document.getElementById("iaLog");
+  var push=function(who,txt){ var d=document.createElement("div"); d.style.margin="0 0 14px";
+    var fmt=Util.esc(txt).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
+    d.innerHTML='<div style="font-size:11px;color:var(--txt-3);margin-bottom:3px">'+(who==="ia"?"✨ Agent IA":"Vous")+'</div>'+
+      '<div style="padding:11px 14px;border-radius:10px;background:'+(who==="ia"?"var(--bg)":"var(--info-bg)")+';display:inline-block;max-width:90%">'+fmt+'</div>';
+    log.appendChild(d); log.scrollTop=log.scrollHeight; };
+  push("ia","Bonjour "+App.state.user.name+". Je suis l'assistant du service achats. Posez une question ou choisissez une suggestion.");
+  var send=function(q){ if(!q.trim())return; push("me",q); document.getElementById("iaInput").value="";
+    setTimeout(function(){ push("ia",IA.answer(q)); Journal.log("Requête IA","Agent IA",q.slice(0,60)); },250); };
+  document.getElementById("iaSend").addEventListener("click",function(){ send(document.getElementById("iaInput").value); });
+  document.getElementById("iaInput").addEventListener("keydown",function(e){ if(e.key==="Enter") send(e.target.value); });
+  var s=document.getElementById("iaSugg");
+  IA.suggestions.forEach(function(q){ var b=document.createElement("button"); b.className="btn ghost sm"; b.textContent=q; b.addEventListener("click",function(){ send(q); }); s.appendChild(b); });
+};
+
+/* --- PARAMÈTRES : matrice de délégation éditable --- */
+App.views.params=function(){
+  var m=Seed.matrix, cfg=IA.cfg();
+  var ro=Auth.readonly();
+  var html='<div class="page-head"><h1>Paramètres & matrice de délégation</h1><p>Configuration des paliers d\'engagement, règles de contrôle et intégration IA</p></div>';
+
+  html+='<div class="card"><div class="card-h"><h3>Matrice de délégation de pouvoir — engagement d\'achat</h3><div class="sp"></div>'+
+    (ro?"":'<button class="btn primary sm" id="addPalier">+ Ajouter un palier</button>')+'</div><div class="card-b flush"><div class="t-wrap"><table id="matTable"><thead><tr>'+
+    '<th>Palier</th><th class="num">Min (FCFA)</th><th class="num">Max (FCFA)</th><th>Validation requise</th><th class="num">Consult.</th><th>Double valid.</th><th>Comment. oblig.</th><th>Règle</th>'+(ro?"":"<th></th>")+'</tr></thead><tbody id="matBody"></tbody></table></div></div></div>';
+
+  html+='<div class="grid-2">';
+  html+='<div class="card"><div class="card-h"><h3>Règles spécifiques</h3></div><div class="card-b">'+
+    '<div class="field"><label>Palier max. pour achat urgent (dérogation)</label><input class="input" id="rgUrg" value="'+Util.esc(m.regles.urgenceMaxPalier)+'" '+(ro?"disabled":"")+'></div>'+
+    '<div class="field"><label>Régularisation urgence (heures)</label><input class="input" type="number" id="rgUrgH" value="'+m.regles.urgenceRegulHeures+'" '+(ro?"disabled":"")+'></div>'+
+    '<div class="field"><label>Fenêtre détection fractionnement (jours)</label><input class="input" type="number" id="rgFrac" value="'+m.regles.fractionnementJours+'" '+(ro?"disabled":"")+'></div>'+
+    '<div class="grid-2"><div class="field"><label>Heure début normale</label><input class="input" type="number" id="rgHd" value="'+m.regles.heureDebutNormale+'" '+(ro?"disabled":"")+'></div>'+
+    '<div class="field"><label>Heure fin normale</label><input class="input" type="number" id="rgHf" value="'+m.regles.heureFinNormale+'" '+(ro?"disabled":"")+'></div></div>'+
+    (ro?"":'<button class="btn primary sm" id="saveRules">Enregistrer les règles</button>')+'</div></div>';
+
+  html+='<div class="card"><div class="card-h"><h3>Intégration IA & maintenance</h3></div><div class="card-b">'+
+    '<div class="field"><label>Webhook n8n (agent IA)</label><input class="input" id="iaHook" placeholder="https://n8n…/webhook/achats" value="'+Util.esc(cfg.webhook)+'" '+(ro?"disabled":"")+'></div>'+
+    '<div class="field"><label><input type="checkbox" id="iaAnthropic" '+(cfg.useAnthropic?"checked":"")+' '+(ro?"disabled":"")+'> Utiliser l\'API Anthropic (sinon fallback local)</label></div>'+
+    (ro?"":'<button class="btn primary sm" id="saveIA">Enregistrer l\'intégration</button>')+
+    '<hr style="margin:18px 0;border:none;border-top:1px solid var(--line)">'+
+    '<p class="muted" style="margin-bottom:10px">Réinitialiser les données de démonstration (Sage X3 miroir) et la matrice par défaut.</p>'+
+    (ro?"":'<button class="btn danger sm" id="resetAll">↺ Réinitialiser les données</button>')+'</div></div>';
+  html+='</div>';
+  return html;
+};
+App.afterRender.params=function(){
+  var ro=Auth.readonly();
+  var renderMat=function(){
+    var m=Seed.matrix, body=document.getElementById("matBody"), html="";
+    m.paliers.forEach(function(p,i){
+      if(ro){
+        html+='<tr><td><b>'+p.code+'</b></td><td class="num mono">'+Util.num(p.min)+'</td><td class="num mono">'+(p.max===null?"∞":Util.num(p.max))+'</td>'+
+          '<td>'+Util.esc(p.valid)+'</td><td class="num">'+p.consult+'</td><td>'+(p.dbl?"Oui":"Non")+'</td><td>'+(p.comment?"Oui":"Non")+'</td><td>'+Util.esc(p.note)+'</td></tr>';
+      } else {
+        html+='<tr data-i="'+i+'">'+
+          '<td><input class="input pmat" data-k="code" value="'+Util.esc(p.code)+'" style="width:60px"></td>'+
+          '<td class="num"><input class="input pmat" data-k="min" type="number" value="'+p.min+'" style="width:120px"></td>'+
+          '<td class="num"><input class="input pmat" data-k="max" type="number" value="'+(p.max===null?"":p.max)+'" placeholder="∞" style="width:120px"></td>'+
+          '<td><input class="input pmat" data-k="valid" value="'+Util.esc(p.valid)+'"></td>'+
+          '<td class="num"><input class="input pmat" data-k="consult" type="number" value="'+p.consult+'" style="width:60px"></td>'+
+          '<td><input type="checkbox" class="pmat" data-k="dbl" '+(p.dbl?"checked":"")+'></td>'+
+          '<td><input type="checkbox" class="pmat" data-k="comment" '+(p.comment?"checked":"")+'></td>'+
+          '<td><input class="input pmat" data-k="note" value="'+Util.esc(p.note)+'"></td>'+
+          '<td><button class="btn ghost sm" data-del="'+i+'">✕</button></td></tr>';
+      }
+    });
+    body.innerHTML=html;
+    if(ro) return;
+    body.querySelectorAll("tr[data-i]").forEach(function(tr){
+      var i=+tr.getAttribute("data-i");
+      tr.querySelectorAll(".pmat").forEach(function(inp){
+        inp.addEventListener("change",function(){
+          var k=inp.getAttribute("data-k"), p=Seed.matrix.paliers[i];
+          if(k==="dbl"||k==="comment") p[k]=inp.checked;
+          else if(k==="min"||k==="consult") p[k]=+inp.value;
+          else if(k==="max") p[k]=inp.value===""?null:+inp.value;
+          else p[k]=inp.value;
+          Store.set("matrix",Seed.matrix); Anomalies.refresh(); Boot.refreshAlertBadges();
+          Journal.log("Modification matrice","Délégation","Palier "+p.code+" — "+k); toast("Matrice mise à jour","ok");
+        });
+      });
+      tr.querySelector("[data-del]").addEventListener("click",function(){ Seed.matrix.paliers.splice(i,1); Store.set("matrix",Seed.matrix); Anomalies.refresh(); renderMat(); toast("Palier supprimé","warn"); });
+    });
+  };
+  renderMat();
+  if(ro) return;
+  var add=document.getElementById("addPalier"); if(add) add.addEventListener("click",function(){ Seed.matrix.paliers.push({code:"P"+(Seed.matrix.paliers.length+1),min:0,max:null,valid:"À définir",consult:1,dbl:false,comment:false,note:""}); Store.set("matrix",Seed.matrix); renderMat(); });
+  document.getElementById("saveRules").addEventListener("click",function(){
+    var r=Seed.matrix.regles; r.urgenceMaxPalier=document.getElementById("rgUrg").value; r.urgenceRegulHeures=+document.getElementById("rgUrgH").value;
+    r.fractionnementJours=+document.getElementById("rgFrac").value; r.heureDebutNormale=+document.getElementById("rgHd").value; r.heureFinNormale=+document.getElementById("rgHf").value;
+    Store.set("matrix",Seed.matrix); Anomalies.refresh(); Boot.refreshAlertBadges(); Journal.log("Modification règles","Délégation"); toast("Règles enregistrées","ok");
+  });
+  document.getElementById("saveIA").addEventListener("click",function(){ IA.setCfg({webhook:document.getElementById("iaHook").value,useAnthropic:document.getElementById("iaAnthropic").checked}); toast("Intégration IA enregistrée","ok"); });
+  document.getElementById("resetAll").addEventListener("click",function(){
+    Modal.open("Réinitialiser les données","<p>Cette action restaure les données de démonstration et la matrice par défaut. Continuer ?</p>",
+      '<button class="btn ghost" data-mclose>Annuler</button><button class="btn danger" id="cfReset">Réinitialiser</button>');
+    document.getElementById("cfReset").addEventListener("click",function(){ Seed.reset(); Anomalies.refresh(); Modal.close(); toast("Données réinitialisées","ok"); Router.go("dashboard"); });
+  });
+};
+
+/* ============================================================
+   AMORÇAGE
+   ============================================================ */
+
+/* ====================================================================
+   AUTHENTIFICATION DIRECTE (grant_type=password) + API
+   ==================================================================== */
+window.APP_CONFIG = {
+  keycloakUrl: "https://auth.mtb-app.com",
+  realm: "Multiprint",
+  clientId: "achat",
+  clientSecret: "BDFsh6pYBtW8cbbiNr6SiNQLBW8zUo0Y", // visible cote navigateur (cf. note securite)
+  apiBase: "https://achats.mtb-app.com",
+  requiredGroup: "achat"
+};
+
+var Session = {
+  token:null, refreshToken:null, parsed:null, _timer:null,
+  _url:function(p){ var c=window.APP_CONFIG;
+    return c.keycloakUrl.replace(/\/+$/,"")+"/realms/"+encodeURIComponent(c.realm)+"/protocol/openid-connect/"+p; },
+  _form:function(o){ return Object.keys(o).filter(function(k){return o[k]!=null && o[k]!=="";})
+    .map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(o[k]);}).join("&"); },
+  _parse:function(jwt){ try{
+    return JSON.parse(decodeURIComponent(escape(atob(jwt.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))))); }
+    catch(e){ return {}; } },
+  groups:function(){ return ((this.parsed&&this.parsed.groups)||[])
+    .map(function(g){ return g[0]==="/"?g.slice(1):g; }); },
+  login:function(username, password){
+    var c=window.APP_CONFIG, self=this;
+    return fetch(this._url("token"), {
+      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"},
+      body:this._form({ grant_type:"password", client_id:c.clientId, client_secret:c.clientSecret,
+                        username:username, password:password, scope:"openid" })
+    }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        if(!res.ok){ throw new Error(res.j.error_description || res.j.error || "Identifiants invalides"); }
+        self._set(res.j); return self.parsed;
+      });
+  },
+  _set:function(j){
+    this.token=j.access_token; this.refreshToken=j.refresh_token; this.parsed=this._parse(j.access_token);
+    if(this._timer) clearTimeout(this._timer);
+    var ms = Math.max(15, (j.expires_in||300)-30)*1000;
+    this._timer = setTimeout(function(){ Session.refresh().catch(function(){}); }, ms);
+  },
+  refresh:function(){
+    var c=window.APP_CONFIG, self=this;
+    if(!this.refreshToken) return Promise.reject(new Error("Pas de refresh token"));
+    return fetch(this._url("token"), {
+      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"},
+      body:this._form({ grant_type:"refresh_token", client_id:c.clientId,
+                        client_secret:c.clientSecret, refresh_token:this.refreshToken })
+    }).then(function(r){ if(!r.ok) throw new Error("Refresh echoue"); return r.json(); })
+      .then(function(j){ self._set(j); return j; });
+  },
+  logout:function(){
+    var c=window.APP_CONFIG, rt=this.refreshToken;
+    if(this._timer) clearTimeout(this._timer);
+    this.token=this.refreshToken=this.parsed=null;
+    if(rt){ fetch(this._url("logout"), { method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded"},
+      body:Session._form({ client_id:c.clientId, client_secret:c.clientSecret, refresh_token:rt })
+    }).catch(function(){}); }
+  }
+};
+
+var Api = {
+  base:function(){ return window.APP_CONFIG.apiBase.replace(/\/+$/,""); },
+  _qs:function(params){
+    if(!params) return "";
+    var pairs=[];
+    for(var k in params){ if(params[k]!=null && params[k]!=="") pairs.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k])); }
+    return pairs.length ? "&"+pairs.join("&") : "";
+  },
+  get:function(path, params){
+    var qs = Api._qs(params);
+    var full = Api.base()+path + (path.indexOf("?")>=0 ? qs : (qs ? "?"+qs.slice(1) : ""));
+    function call(){ return fetch(full, { headers:{ "Authorization":"Bearer "+Session.token } }); }
+    return call().then(function(r){
+      if(r.status===401){ return Session.refresh().then(call); }
+      return r;
+    }).then(function(r){
+      if(r.status===403){ throw new Error("Acces refuse (groupe achat requis)"); }
+      if(!r.ok){ throw new Error("HTTP "+r.status+" sur "+path); }
+      return r.json();
+    });
+  }
+};
+
+var ApiFilters = {
+  state:{ requisitions:{limit:500,offset:0}, rfqs:{limit:500,offset:0}, orders:{limit:500,offset:0}, receipts:{limit:500,offset:0}, invoices:{limit:500,offset:0} },
+  params:function(key, extra){
+    var s=this.state[key]||{}, p={limit:s.limit||500, offset:s.offset||0};
+    if(s.date_debut) p.date_debut=s.date_debut;
+    if(s.date_fin) p.date_fin=s.date_fin;
+    Object.keys(extra||{}).forEach(function(k){ if(extra[k]!==""&&extra[k]!=null) p[k]=extra[k]; });
+    return p;
+  },
+  bar:function(key, label){
+    var s=this.state[key]||{};
+    return '<div class="filters" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)">'+
+      '<span class="muted">'+Util.esc(label||"Filtres API")+'</span>'+
+      '<input class="input" type="date" id="'+key+'Debut" value="'+Util.esc(s.date_debut||'')+'" style="width:150px">'+
+      '<input class="input" type="date" id="'+key+'Fin" value="'+Util.esc(s.date_fin||'')+'" style="width:150px">'+
+      '<select class="input" id="'+key+'Limit" style="width:110px"><option>50</option><option>100</option><option>200</option><option>500</option></select>'+
+      '<button class="btn ghost sm" id="'+key+'Prev">Préc.</button>'+
+      '<span class="muted">page '+(Math.floor((s.offset||0)/(s.limit||500))+1)+'</span>'+
+      '<button class="btn ghost sm" id="'+key+'Next">Suiv.</button>'+
+      '<button class="btn primary sm" id="'+key+'Apply">Appliquer</button>'+
+    '</div>';
+  },
+  bind:function(key, endpointKey, extraFn){
+    var s=this.state[key]||{}; this.state[key]=s;
+    var lim=document.getElementById(key+"Limit"); if(lim) lim.value=String(s.limit||500);
+    var apply=function(delta){
+      s.date_debut=(document.getElementById(key+"Debut")||{}).value||"";
+      s.date_fin=(document.getElementById(key+"Fin")||{}).value||"";
+      s.limit=Number((document.getElementById(key+"Limit")||{}).value)||500;
+      s.offset=Math.max(0,(s.offset||0)+(delta||0)*s.limit);
+      var filters={}; filters[endpointKey]=ApiFilters.params(key, extraFn?extraFn():{});
+      toast("Rechargement des données...", "info");
+      Seed.loadFromApi(filters).then(function(db){ DB=db; Router.go(App.state.route); toast("Données rechargées", "ok"); })
+        .catch(function(e){ toast(e.message||"Erreur API", "crit"); });
+    };
+    var a=document.getElementById(key+"Apply"), p=document.getElementById(key+"Prev"), n=document.getElementById(key+"Next");
+    if(a) a.addEventListener("click",function(){ s.offset=0; apply(0); });
+    if(p) p.addEventListener("click",function(){ apply(-1); });
+    if(n) n.addEventListener("click",function(){ apply(1); });
+  }
+};
+
+Seed.loadFromApi = function(filters){
+  filters = filters || {};
+  var db = Seed.build();
+  return Promise.all([
+    Api.get("/reference/suppliers", Object.assign({limit:1000,offset:0}, filters.suppliers||{})),
+    Api.get("/reference/articles", Object.assign({limit:1000,offset:0}, filters.articles||{})),
+    Api.get("/orders", Object.assign({limit:500,offset:0}, filters.orders||{})),
+    Api.get("/invoices", Object.assign({limit:500,offset:0}, filters.invoices||{})),
+    Api.get("/receipts", Object.assign({limit:500,offset:0}, filters.receipts||{})),
+    Api.get("/requisitions", Object.assign({limit:500,offset:0}, filters.requisitions||{})),
+    Api.get("/rfqs", Object.assign({limit:500,offset:0}, filters.rfqs||{})),
+    Api.get("/invoices/three-way-match?limit=2000", filters.tw),
+    Api.get("/anomalies?limit=500", filters.anomalies)
+  ]).then(function(res){
+    var suppliers=Array.isArray(res[0])?res[0]:(res[0]&&res[0].items)||[];
+    var articles=Array.isArray(res[1])?res[1]:(res[1]&&res[1].items)||[];
+    var orders=res[2].items, invoices=res[3].items, receipts=res[4].items;
+    var reqs=res[5].items, rfqs=res[6].items, tw=res[7].items;
+    var anomalies=res[8].items;
+    db.anomalies_api = anomalies || [];
+    db.fournisseurs = suppliers.map(function(s){
+      return { id:s.id, nom:s.nom||s.id, pays:s.pays||"", devise:s.devise||"",
+               categorie:s.categorie||"-", cond:s.cond||"-",
+               niu:s.niu||"", rccm:s.rccm||"",
+               homologue:s.homologue!=null?!!s.homologue:true,
+               risque:s.risque||"Non évalué",
+               note:s.note!=null?s.note:0,
+               kyc:s.kyc!=null?!!s.kyc:false,
+               nbCommandes:s.nb_commandes||0, montantTotal:s.montant_total_ht||0,
+               derniereCommande:s.derniere_commande||null,
+               fournisseurPref:s.id,
+               delaiMoyen:s.delai_moyen||0, tauxConf:s.taux_confiance||0,
+               retards:s.retards||0, ribModifie:s.rib_modifie||false,
+               dateCreation:s.date_creation||null }; });
+    db.articles = articles.map(function(a){
+      return { id:a.code, code:a.code, nom:a.nom||a.code, famille:a.famille||"-",
+               pu:a.pu!=null?a.pu:(a.pu_moyen||0),
+               puStd:a.pu_std!=null?a.pu_std:0,
+               montantTotal:a.montant_total||0, qteTotale:a.qte_totale||0,
+               nbLignes:a.nb_lignes||0,
+               critique:a.critique!=null?!!a.critique:(a.statut==="inactive"||a.statut==="bloqué"),
+               stock:a.stock!=null?a.stock:0, stockSecu:a.stock_secu!=null?a.stock_secu:0, secu:a.stock_secu!=null?a.stock_secu:0,
+               consoMoy:_na(a.conso_moy,0), delaiAppro:_na(a.delai_appro,0), transit:_na(a.transit,0), enCmd:_na(a.en_cmd,0),
+               reserve:_na(a.reserve,0), min:_na(a.min,0), max:_na(a.max,0), fournisseurPref:_na(a.fournisseur_pref,null) }; });
+    function _na(v,def){ return v==="NA"?def:v; }
+    db.commandes = orders.map(function(o){
+      var q=o.qte||0;
+      return { id:o.id, ref:o.reference||o.id, fournisseurId:o.fournisseur_id, articleId:o.article_principal||null, qte:q,
+               nbLignes:o.nb_lignes||0, acheteur:o.acheteur||"-",
+               nbReceptions:o.nb_receptions||0, nbFactures:o.nb_factures||0,
+               pu:o.pu!=null?o.pu:(q?Math.round((o.montant_ht||0)/q):0), montant:o.montant_ht||0,
+               statut:o.statut||"-", date:o.date, livPrevue:o.liv_prevue||null, livReelle:o.liv_reelle||null,
+               daLiee:o.da_liee||null, validee:o.validee!=null?!!o.validee:true,
+               consultee:!!_na(o.consultee,false), modifApresValid:!!_na(o.modif_apres_valid,false),
+               prixAnormal:!!_na(o.prix_anormal,false), homologue:!!_na(o.homologue,true),
+               heureSaisie:o.heure_saisie||null, budget:_na(o.budget,null) }; });
+    var twByInv={};
+    tw.forEach(function(t){ var k=t.facture; if(!twByInv[k]) twByInv[k]={cmd:null,rec:null,sansRec:false,ecartPrix:false,ecartQte:false};
+      if(t.commande&&!twByInv[k].cmd) twByInv[k].cmd=t.commande;
+      if(t.reception&&!twByInv[k].rec) twByInv[k].rec=t.reception;
+      if(!t.a_reception) twByInv[k].sansRec=true; });
+    db.factures = invoices.map(function(f){ var m=twByInv[f.id]||{}; var ht=f.montant_ht||0, ttc=f.montant_ttc||0;
+      var hasEcart = !f.conforme;
+      var tauxTva=_na(f.taux_tva,0); if(tauxTva>1) tauxTva=tauxTva/100;
+      return { id:f.id, num:f.num_fournisseur||f.id, fournisseurId:f.fournisseur_id,
+               commandeId:m.cmd||null, receptionId:m.rec||null, articleId:f.article_id||null,
+               ht:ht, ttc:ttc, statut:f.statut||"-",
+               nbLignes:f.nb_lignes||0, conforme:!!f.conforme,
+               ecartPrix:hasEcart, ecartQte:!!_na(f.ecart_qte,!!m.ecartQte), doublon:!!_na(f.doublon,false),
+               sansCommande:!!f.sans_commande,
+               sansReception:(f.sans_reception!=null?!!f.sans_reception:!!m.sansRec), date:f.date,
+               qteFact:f.qte_fact||0, puFact:f.pu_fact||0, tauxTva:tauxTva,
+               tva:_na(f.tva,Math.max(0,ttc-ht)),
+               transport:_na(f.transport,0), echeance:f.echeance||null,
+               justifie:!!_na(f.justifie,true), controlee:!!_na(f.controlee,false) }; });
+    db.receptions = receipts.map(function(r){
+      return { id:r.id, commandeId:r.commande_id||null, fournisseurId:r.fournisseur_id, articleId:r.article_id||null,
+               qte:r.qte||0, qteCmd:_na(r.qte_cmd,0), qteRecu:r.qte_recu||0, qteAccept:_na(r.qte_accept,0), montant:r.montant_ht||0,
+               date:r.date, dateArrivee:r.date_arrivee||null,
+               facturee:!!r.facturee, conforme:!!r.conforme, controlee:!!r.controlee,
+               ecartQte:!!_na(r.ecart_qte,false), lot:_na(r.lot,null),
+               controleur:_na(r.controleur,null), docQualite:!!_na(r.doc_qualite,false),
+               sansCommande:!!_na(r.sans_commande,false), habilite:!!_na(r.habilite,true) }; });
+    db.demandes = reqs.map(function(d){
+      return { id:d.id, demandeur:d.demandeur||"-", service:d.site||"-", articleId:d.article_principal||null,
+               qte:d.qte||0, motif:d.motif||"",
+               fournisseurPropose:d.fournisseur_propose||null, montant:d.montant||0, palier:d.palier,
+               statut:d.statut||"En attente", date:d.date,
+               dateDemande:d.date, dateSouhaitee:d.date_souhaitee||null,
+               acheteur:d.acheteur||"-", urgent:!!_na(d.urgent,false), horsBudget:!!_na(d.hors_budget,false) }; });
+    db.consultations = rfqs.map(function(c){
+      var offres=(c.offres||[]).map(function(o){
+                 return { fournisseurId:o.fournisseur_id, nom:o.nom||o.fournisseur_id, prix:_na(o.prix,0), delai:_na(o.delai,0),
+                          cond:_na(o.cond,"-"), fraisAnnexes:_na(o.frais_annexes,0), devise:_na(o.devise,"FCFA"),
+                          validite:o.validite, docRecu:!!_na(o.doc_recu,false), choisi:!!_na(o.choisi,false) };
+               });
+      offres.sort(function(a,b){ if(a.prix<=0&&b.prix<=0) return 0; if(a.prix<=0) return 1; if(b.prix<=0) return -1; return a.prix-b.prix; });
+      return { id:c.id, articleId:c.article_principal||null, qte:c.qte||0,
+               offres:offres,
+               date:c.date, acheteur:c.acheteur||"-",
+               nbConsulteRequis:_na(c.nb_consulte_requis,c.source==="fallback_da"?0:3),
+               justifChoix:_na(c.justif_choix,""),
+               source:c.source||"sage_rfq" }; });
+    return db;
+  });
+};
+
+Auth.login = function(){};
+Auth.logout = function(){
+  Session.logout(); App.state.user=null; Store.del("route");
+  document.getElementById("shell").classList.remove("on");
+  var l=document.getElementById("login"); if(l) l.style.display="flex";
+  var p=document.getElementById("kcPass"); if(p) p.value="";
+  Boot.renderLoginForm();
+};
+
+Boot.renderLoginForm = function(){
+  var form=document.getElementById("loginForm");
+  var err=document.getElementById("kcErr");
+  var btn=document.getElementById("kcSubmit");
+  if(!form) return;
+  form.onsubmit = function(e){
+    e.preventDefault();
+    err.style.display="none";
+    var u=document.getElementById("kcUser").value.trim();
+    var p=document.getElementById("kcPass").value;
+    if(!u || !p) return;
+    btn.disabled=true; btn.textContent="Connexion...";
+    Session.login(u,p).then(function(tp){
+      if(Session.groups().indexOf(window.APP_CONFIG.requiredGroup) < 0){
+        throw new Error("Votre compte n'appartient pas au groupe \u00ab "+window.APP_CONFIG.requiredGroup+" \u00bb.");
+      }
+      var name=tp.name||tp.preferred_username||u;
+      App.state.user={ role:"acheteur", name:name,
+        initials:name.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase(),
+        username:tp.preferred_username, email:tp.email };
+      btn.textContent="Chargement des donnees...";
+      return Seed.loadFromApi();
+    }).then(function(db){
+      DB=db; Seed.matrix=Seed.defaultMatrix(); Store.set("seeded",1);
+      btn.disabled=false; btn.textContent="Se connecter";
+      Boot.enter();
+    }).catch(function(ex){
+      err.textContent = ex && ex.message ? ex.message : String(ex);
+      err.style.display="block";
+      btn.disabled=false; btn.textContent="Se connecter";
+    });
+  };
+};
+
+Boot.init = function(){
+  var th=Store.get("theme","light"); document.documentElement.setAttribute("data-theme",th);
+  document.getElementById("btnTheme").addEventListener("click", this.toggleTheme);
+  document.getElementById("btnLogout").addEventListener("click", function(){ Auth.logout(); });
+  document.getElementById("btnAlerts").addEventListener("click", function(){ Router.go("alertes"); });
+  var l=document.getElementById("login"); if(l) l.style.display="flex";
+  Boot.renderLoginForm();
+};
+
+
+Boot.init();
+</script>
+</body>
+</html>
