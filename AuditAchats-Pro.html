@@ -1056,13 +1056,29 @@ function cmdDetail(id){
   var c=DB.commandes.filter(function(x){return x.id===id;})[0]; var f=Seed.four(c.fournisseurId),a=Seed.art(c.articleId);
   var p=Seed.palierFor(c.montant); var an=anomFor("Commande",id);
   var body='<dl class="kv">'+
+    '<dt>ID</dt><dd>'+Util.esc(c.id)+'</dd>'+
+    '<dt>Référence</dt><dd>'+Util.esc(c.ref)+'</dd>'+
     '<dt>Fournisseur</dt><dd>'+Util.esc(f.nom)+(f.homologue?"":' '+C.pill("non homologué","crit"))+'</dd>'+
     '<dt>Article</dt><dd>'+Util.esc(a.nom)+'</dd>'+
-    '<dt>Quantité / PU</dt><dd>'+c.qte+' × '+Util.fcfa(c.pu)+'</dd>'+
+    '<dt>Quantité</dt><dd>'+c.qte+'</dd>'+
+    '<dt>PU</dt><dd><span class="mono">'+Util.fcfa(c.pu)+'</span></dd>'+
     '<dt>Montant total</dt><dd><b class="mono">'+Util.fcfa(c.montant)+'</b></dd>'+
+    '<dt>Date</dt><dd>'+Util.date(c.date)+'</dd>'+
+    '<dt>Livraison prévue</dt><dd>'+(c.livPrevue?Util.date(c.livPrevue):'-')+'</dd>'+
+    '<dt>Livraison réelle</dt><dd>'+(c.livReelle?Util.date(c.livReelle):'-')+'</dd>'+
+    '<dt>Statut</dt><dd>'+C.pill(c.statut||"-","mut")+'</dd>'+
+    '<dt>Achetur</dt><dd>'+Util.esc(c.acheteur)+'</dd>'+
+    '<dt>Nb lignes</dt><dd>'+(c.nbLignes||0)+'</dd>'+
+    '<dt>Nb réceptions</dt><dd>'+(c.nbReceptions||0)+'</dd>'+
+    '<dt>Nb factures</dt><dd>'+(c.nbFactures||0)+'</dd>'+
     '<dt>Demande liée</dt><dd>'+(c.daLiee||'<span class="pill warn">aucune</span>')+'</dd>'+
+    '<dt>Budget</dt><dd>'+(c.budget?Util.esc(c.budget):'-')+'</dd>'+
+    '<dt>Heure saisie</dt><dd>'+(c.heureSaisie||'-')+'</dd>'+
     '<dt>Validée</dt><dd>'+(c.validee?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
     '<dt>Consultation</dt><dd>'+(c.consultee?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
+    '<dt>Modif. après valid</dt><dd>'+(c.modifApresValid?C.pill("Oui","crit"):C.pill("Non","ok"))+'</dd>'+
+    '<dt>Prix anormal</dt><dd>'+(c.prixAnormal?C.pill("Oui","crit"):C.pill("Non","ok"))+'</dd>'+
+    '<dt>Homologué</dt><dd>'+(c.homologue?C.pill("Oui","ok"):C.pill("Non","crit"))+'</dd>'+
     '</dl>';
   body+='<div style="margin-top:16px;padding:12px;border-radius:8px;background:var(--bg)"><b style="font-size:12px">Matrice de délégation — palier '+p.code+'</b>'+
     '<dl class="kv" style="margin-top:8px">'+
@@ -1114,14 +1130,28 @@ App.afterRender.receptions=function(){
   render();
 };
 function recDetail(id){
-  var r=DB.receptions.filter(function(x){return x.id===id;})[0]; var f=Seed.four(r.fournisseurId);
+  var r=DB.receptions.filter(function(x){return x.id===id;})[0]; var f=Seed.four(r.fournisseurId),a=Seed.art(r.articleId);
   var body='<dl class="kv">'+
+    '<dt>ID</dt><dd>'+Util.esc(r.id)+'</dd>'+
+    '<dt>Commande liée</dt><dd>'+(r.commandeId||'<span class="pill warn">aucune</span>')+'</dd>'+
     '<dt>Fournisseur</dt><dd>'+Util.esc(f?f.nom:r.fournisseurId||'-')+'</dd>'+
+    '<dt>Article</dt><dd>'+Util.esc(a.nom||'-')+'</dd>'+
     '<dt>Qté</dt><dd>'+r.qte+'</dd>'+
+    '<dt>Qté commandée</dt><dd>'+(r.qteCmd||0)+'</dd>'+
+    '<dt>Qté reçue</dt><dd>'+(r.qteRecu||0)+'</dd>'+
+    '<dt>Qté acceptée</dt><dd>'+(r.qteAccept||0)+'</dd>'+
     '<dt>Montant HT</dt><dd><span class="mono">'+Util.fcfa(r.montant)+'</span></dd>'+
     '<dt>Date</dt><dd>'+Util.date(r.date)+'</dd>'+
     '<dt>Date arrivée</dt><dd>'+(r.dateArrivee?Util.date(r.dateArrivee):'-')+'</dd>'+
+    '<dt>Lot</dt><dd>'+(r.lot||'-')+'</dd>'+
     '<dt>Facturée</dt><dd>'+(r.facturee?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
+    '<dt>Conforme</dt><dd>'+(r.conforme?C.pill("Oui","ok"):C.pill("Non","crit"))+'</dd>'+
+    '<dt>Contrôlée</dt><dd>'+(r.controlee?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
+    '<dt>Écart qté</dt><dd>'+(r.ecartQte?C.pill("Oui","crit"):C.pill("Non","ok"))+'</dd>'+
+    '<dt>Sans commande</dt><dd>'+(r.sansCommande?C.pill("Oui","crit"):C.pill("Non","ok"))+'</dd>'+
+    '<dt>Contrôleur</dt><dd>'+Util.esc(r.controleur||'-')+'</dd>'+
+    '<dt>Doc qualité</dt><dd>'+(r.docQualite?C.pill("Oui","ok"):C.pill("Non","warn"))+'</dd>'+
+    '<dt>Habilité</dt><dd>'+(r.habilite?C.pill("Oui","ok"):C.pill("Non","crit"))+'</dd>'+
     '</dl>';
   Modal.open("Réception "+id,body,'<button class="btn ghost" data-mclose>Fermer</button>');
 }
