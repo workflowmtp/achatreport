@@ -907,7 +907,7 @@ App.views.da=function(){
 };
 App.afterRender.da=function(){
   var render=function(){ var q=(document.getElementById("daSearch").value||"").toLowerCase(); var st=document.getElementById("daStatut").value;
-    var rows=DB.demandes.filter(function(d){ var art=Seed.art(d.articleId); var ok=(!q||d.id.toLowerCase().indexOf(q)>=0||art.nom.toLowerCase().indexOf(q)>=0||d.service.toLowerCase().indexOf(q)>=0); if(st&&d.statut!==st) ok=false; return ok; });
+    var rows=DB.demandes.filter(function(d){ var art=Seed.art(d.articleId); var ok=ApiFilters.matchDate("requisitions",d.dateDemande)&&(!q||d.id.toLowerCase().indexOf(q)>=0||art.nom.toLowerCase().indexOf(q)>=0||d.service.toLowerCase().indexOf(q)>=0); if(st&&d.statut!==st) ok=false; return ok; });
     document.getElementById("daTable").innerHTML=C.table([
       {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>'+(r.urgent?' '+C.pill("URGENT","imp"):"");}},
       {t:"Article",r:function(r){return Util.esc(Seed.art(r.articleId).nom);}},
@@ -922,7 +922,7 @@ App.afterRender.da=function(){
   };
   document.getElementById("daSearch").addEventListener("input",render);
   document.getElementById("daStatut").addEventListener("change",render);
-  ApiFilters.bind("requisitions","requisitions",function(){ return {statut:document.getElementById("daStatut").value}; });
+  ApiFilters.bind("requisitions","requisitions",function(){ return {statut:document.getElementById("daStatut").value}; },render);
   render();
 };
 function daDetail(id){
@@ -956,16 +956,20 @@ App.views.consult=function(){
   return html;
 };
 App.afterRender.consult=function(){
-  document.getElementById("consTable").innerHTML=C.table([
-    {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>'+(r.source==="fallback_da"?' '+C.pill("DA","info"):"");}},
-    {t:"Article",r:function(r){return Util.esc(Seed.art(r.articleId).nom)+' (×'+r.qte+')';}},
-    {t:"Offres",num:true,r:function(r){return r.offres.length+'/'+r.nbConsulteRequis+(r.offres.length<r.nbConsulteRequis?' '+C.pill("insuffisant","imp"):"");}},
-    {t:"Meilleur prix",num:true,r:function(r){return r.offres.length&&r.offres[0].prix>0?'<b class="mono">'+Util.fcfa(r.offres[0].prix)+'</b>':'<span class="muted">NA</span>';}},
-    {t:"Contrôle",r:function(r){return flagCell("Consultation",r.id);}},
-    {t:"",r:function(r){return '<button class="btn primary sm" data-cons="'+r.id+'">'+(r.source==="fallback_da"?"Voir":"Comparer")+'</button>';}}
-  ],DB.consultations);
-  document.querySelectorAll("[data-cons]").forEach(function(b){ b.addEventListener("click",function(){ consCompare(b.getAttribute("data-cons")); }); });
-  ApiFilters.bind("rfqs","rfqs",function(){ return {}; });
+  var render=function(){
+    var consRows=DB.consultations.filter(function(c){ return ApiFilters.matchDate("rfqs",c.date); });
+    document.getElementById("consTable").innerHTML=C.table([
+      {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>'+(r.source==="fallback_da"?' '+C.pill("DA","info"):"");}},
+      {t:"Article",r:function(r){return Util.esc(Seed.art(r.articleId).nom)+' (×'+r.qte+')';}},
+      {t:"Offres",num:true,r:function(r){return r.offres.length+'/'+r.nbConsulteRequis+(r.offres.length<r.nbConsulteRequis?' '+C.pill("insuffisant","imp"):"");}},
+      {t:"Meilleur prix",num:true,r:function(r){return r.offres.length&&r.offres[0].prix>0?'<b class="mono">'+Util.fcfa(r.offres[0].prix)+'</b>':'<span class="muted">NA</span>';}},
+      {t:"Contrôle",r:function(r){return flagCell("Consultation",r.id);}},
+      {t:"",r:function(r){return '<button class="btn primary sm" data-cons="'+r.id+'">'+(r.source==="fallback_da"?"Voir":"Comparer")+'</button>';}}
+    ],consRows);
+    document.querySelectorAll("[data-cons]").forEach(function(b){ b.addEventListener("click",function(){ consCompare(b.getAttribute("data-cons")); }); });
+  };
+  ApiFilters.bind("rfqs","rfqs",function(){ return {}; },render);
+  render();
 };
 function scoreOffre(o,minPrix,minDelai,four){
   var sPrix = minPrix/o.prix*40;                 // 40 pts prix
@@ -1029,7 +1033,7 @@ App.views.commandes=function(){
 };
 App.afterRender.commandes=function(){
   var render=function(){ var q=(document.getElementById("cmdSearch").value||"").toLowerCase(); var st=document.getElementById("cmdStatut").value;
-    var rows=DB.commandes.filter(function(c){ var f=Seed.four(c.fournisseurId),a=Seed.art(c.articleId); var ok=(!q||c.id.toLowerCase().indexOf(q)>=0||f.nom.toLowerCase().indexOf(q)>=0||a.nom.toLowerCase().indexOf(q)>=0); if(st&&c.statut!==st) ok=false; return ok; });
+    var rows=DB.commandes.filter(function(c){ var f=Seed.four(c.fournisseurId),a=Seed.art(c.articleId); var ok=ApiFilters.matchDate("orders",c.date)&&(!q||c.id.toLowerCase().indexOf(q)>=0||f.nom.toLowerCase().indexOf(q)>=0||a.nom.toLowerCase().indexOf(q)>=0); if(st&&c.statut!==st) ok=false; return ok; });
     document.getElementById("cmdTable").innerHTML=C.table([
       {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>';}},
       {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom);}},
@@ -1044,7 +1048,7 @@ App.afterRender.commandes=function(){
   };
   document.getElementById("cmdSearch").addEventListener("input",render);
   document.getElementById("cmdStatut").addEventListener("change",render);
-  ApiFilters.bind("orders","orders",function(){ return {statut:document.getElementById("cmdStatut").value}; });
+  ApiFilters.bind("orders","orders",function(){ return {statut:document.getElementById("cmdStatut").value}; },render);
   render();
 };
 function cmdDetail(id){
@@ -1088,7 +1092,7 @@ App.views.receptions=function(){
 };
 App.afterRender.receptions=function(){
   var render=function(){ var q=(document.getElementById("recSearch").value||"").toLowerCase(); var fa=document.getElementById("recFacturee").value;
-    var rows=DB.receptions.filter(function(r){ var f=Seed.four(r.fournisseurId); var ok=(!q||r.id.toLowerCase().indexOf(q)>=0||(f&&f.nom||"").toLowerCase().indexOf(q)>=0); if(fa==="true"&&!r.facturee) ok=false; if(fa==="false"&&r.facturee) ok=false; return ok; });
+    var rows=DB.receptions.filter(function(r){ var f=Seed.four(r.fournisseurId); var ok=ApiFilters.matchDate("receipts",r.date)&&(!q||r.id.toLowerCase().indexOf(q)>=0||(f&&f.nom||"").toLowerCase().indexOf(q)>=0); if(fa==="true"&&!r.facturee) ok=false; if(fa==="false"&&r.facturee) ok=false; return ok; });
     document.getElementById("recTable").innerHTML=C.table([
     {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>';}},
     {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom)||'-';}},
@@ -1104,7 +1108,7 @@ App.afterRender.receptions=function(){
   };
   document.getElementById("recSearch").addEventListener("input",render);
   document.getElementById("recFacturee").addEventListener("change",render);
-  ApiFilters.bind("receipts","receipts",function(){ var v=document.getElementById("recFacturee").value; return {facturee:v==="true"?true:(v==="false"?false:"")}; });
+  ApiFilters.bind("receipts","receipts",function(){ var v=document.getElementById("recFacturee").value; return {facturee:v==="true"?true:(v==="false"?false:"")}; },render);
   render();
 };
 function recDetail(id){
@@ -1140,7 +1144,7 @@ App.views.factures=function(){
 };
 App.afterRender.factures=function(){
   var render=function(){ var q=(document.getElementById("facSearch").value||"").toLowerCase(); var st=document.getElementById("facStatut").value; var cf=document.getElementById("facConforme").value;
-    var rows=DB.factures.filter(function(f){ var ok=(!q||f.num.toLowerCase().indexOf(q)>=0||Seed.four(f.fournisseurId).nom.toLowerCase().indexOf(q)>=0); if(st&&f.statut!==st) ok=false; if(cf){ var cok=!f.sansReception&&!f.ecartPrix&&!f.ecartQte&&!f.doublon; if(cf==="ok"&&!cok) ok=false; if(cf==="nok"&&cok) ok=false; } return ok; });
+    var rows=DB.factures.filter(function(f){ var ok=ApiFilters.matchDate("invoices",f.date)&&(!q||f.num.toLowerCase().indexOf(q)>=0||Seed.four(f.fournisseurId).nom.toLowerCase().indexOf(q)>=0); if(st&&f.statut!==st) ok=false; if(cf){ var cok=!f.sansReception&&!f.ecartPrix&&!f.ecartQte&&!f.doublon; if(cf==="ok"&&!cok) ok=false; if(cf==="nok"&&cok) ok=false; } return ok; });
     document.getElementById("facTable").innerHTML=C.table([
       {t:"N° Facture",r:function(r){return '<b class="mono">'+Util.esc(r.num)+'</b>';}},
       {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom);}},
@@ -1156,7 +1160,7 @@ App.afterRender.factures=function(){
   document.getElementById("facSearch").addEventListener("input",render);
   document.getElementById("facStatut").addEventListener("change",render);
   document.getElementById("facConforme").addEventListener("change",render);
-  ApiFilters.bind("invoices","invoices",function(){ var v=document.getElementById("facConforme").value; return {conforme:v==="ok"?true:(v==="nok"?false:"")}; });
+  ApiFilters.bind("invoices","invoices",function(){ var v=document.getElementById("facConforme").value; return {conforme:v==="ok"?true:(v==="nok"?false:"")}; },render);
   render();
 };
 function facMatch(f){
@@ -1786,6 +1790,13 @@ var ApiFilters = {
     Object.keys(extra||{}).forEach(function(k){ if(extra[k]!==""&&extra[k]!=null) p[k]=extra[k]; });
     return p;
   },
+  matchDate:function(key, value){
+    var s=this.state[key]||{};
+    var d=value ? String(value).slice(0,10) : "";
+    if(s.date_debut && (!d || d<s.date_debut)) return false;
+    if(s.date_fin && (!d || d>s.date_fin)) return false;
+    return true;
+  },
   bar:function(key, label){
     var s=this.state[key]||{};
     return '<div class="filters" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)">'+
@@ -1799,7 +1810,7 @@ var ApiFilters = {
       '<button class="btn primary sm" id="'+key+'Apply">Appliquer</button>'+
     '</div>';
   },
-  bind:function(key, endpointKey, extraFn){
+  bind:function(key, endpointKey, extraFn, renderFn){
     var s=this.state[key]||{}; this.state[key]=s;
     var lim=document.getElementById(key+"Limit"); if(lim) lim.value=String(s.limit||500);
     var apply=function(delta){
@@ -1816,6 +1827,15 @@ var ApiFilters = {
     if(a) a.addEventListener("click",function(){ s.offset=0; apply(0); });
     if(p) p.addEventListener("click",function(){ apply(-1); });
     if(n) n.addEventListener("click",function(){ apply(1); });
+    [key+"Debut",key+"Fin",key+"Limit"].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.addEventListener("change",function(){
+        s.date_debut=(document.getElementById(key+"Debut")||{}).value||"";
+        s.date_fin=(document.getElementById(key+"Fin")||{}).value||"";
+        s.limit=Number((document.getElementById(key+"Limit")||{}).value)||500;
+        if(renderFn) renderFn();
+      });
+    });
   }
 };
 
