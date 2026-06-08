@@ -275,8 +275,8 @@ var ROLES = {
 var Auth = {
   can:function(perm){ var u=App.state.user; if(!u) return false; var r=ROLES[u.role]; return r && r.perms.indexOf(perm)>=0; },
   readonly:function(){ var u=App.state.user; return u && ROLES[u.role] && ROLES[u.role].readonly; },
-  mapRole:function(groups){
-    var g=(groups||[]).map(function(x){return x.toLowerCase();});
+  mapRole:function(roles){
+    var g=(roles||[]).map(function(x){return String(x).toLowerCase();});
     if(g.indexOf("dg")>=0) return "dg";
     if(g.indexOf("da")>=0) return "da";
     if(g.indexOf("finance")>=0) return "finance";
@@ -1777,6 +1777,10 @@ var Session = {
     catch(e){ return {}; } },
   groups:function(){ return ((this.parsed&&this.parsed.groups)||[])
     .map(function(g){ return g[0]==="/"?g.slice(1):g; }); },
+  appRoles:function(){
+    var ra=this.parsed&&this.parsed.resource_access;
+    return (ra&&ra.achat&&ra.achat.roles)||[];
+  },
   login:function(username, password){
     var c=window.APP_CONFIG, self=this;
     return fetch(this._url("token"), {
@@ -2050,15 +2054,15 @@ Boot.renderLoginForm = function(){
     btn.disabled=true; btn.textContent="Connexion...";
     Session.login(u,p).then(function(tp){
       console.log("Token payload:", Session.parsed);
-      console.log("realm_access.roles:", Session.parsed&&Session.parsed.realm_access?Session.parsed.realm_access.roles:"N/A");
-      console.log("groups:", Session.parsed?Session.parsed.groups:"N/A");
-      var groups=Session.groups();
-      console.log("Keycloak groups:", groups, "-> mapped role:", Auth.mapRole(groups));
+      console.log("resource_access.achat.roles:", Session.appRoles());
+      console.log("groups:", Session.groups());
+      var appRoles=Session.appRoles(), groups=Session.groups();
+      console.log("App roles:", appRoles, "-> mapped role:", Auth.mapRole(appRoles));
       if(groups.indexOf(window.APP_CONFIG.requiredGroup) < 0){
         throw new Error("Votre compte n'appartient pas au groupe \u00ab "+window.APP_CONFIG.requiredGroup+" \u00bb.");
       }
       var name=tp.name||tp.preferred_username||u;
-      var role=Auth.mapRole(groups);
+      var role=Auth.mapRole(appRoles);
       App.state.user={ role:role, name:name,
         initials:name.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase(),
         username:tp.preferred_username, email:tp.email };
@@ -2088,8 +2092,10 @@ Boot.init = function(){
     var ms=Math.max(15, exp-Math.floor(Date.now()/1000)-30)*1000;
     if(ms>0) Session._timer=setTimeout(function(){ Session.refresh().catch(function(){}); }, ms);
     else Session.refresh().catch(function(){});
+    var restoredRole=Auth.mapRole(Session.appRoles());
+    if(sess.role!==restoredRole){ console.log("Role updated from token:", sess.role, "->", restoredRole); sess.role=restoredRole; Store.set("session", sess); }
     App.state.user=sess;
-    console.log("Session restored. Keycloak groups:", Session.groups(), "-> mapped role:", Auth.mapRole(Session.groups()));
+    console.log("Session restored. App roles:", Session.appRoles(), "groups:", Session.groups(), "-> mapped role:", Auth.mapRole(Session.appRoles()));
     Seed.loadFromApi().then(function(db){ DB=db; Boot.enter(); }).catch(function(e){
       console.error("Session restore failed:", e);
       Auth.logout();
