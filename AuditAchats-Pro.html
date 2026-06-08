@@ -2086,7 +2086,12 @@ Boot.init = function(){
     if(ms>0) Session._timer=setTimeout(function(){ Session.refresh().catch(function(){}); }, ms);
     else Session.refresh().catch(function(){});
     App.state.user=sess;
-    Seed.loadFromApi().then(function(db){ DB=db; Boot.enter(); }).catch(function(){ Boot.renderLoginForm(); });
+    Seed.loadFromApi().then(function(db){ DB=db; Boot.enter(); }).catch(function(e){
+      console.error("Session restore failed:", e);
+      Auth.logout();
+      var l=document.getElementById("login"); if(l) l.style.display="flex";
+      Boot.renderLoginForm();
+    });
     return;
   }
   var l=document.getElementById("login"); if(l) l.style.display="flex";
