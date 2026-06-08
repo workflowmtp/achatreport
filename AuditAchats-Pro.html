@@ -2053,7 +2053,9 @@ Boot.renderLoginForm = function(){
         throw new Error("Votre compte n'appartient pas au groupe \u00ab "+window.APP_CONFIG.requiredGroup+" \u00bb.");
       }
       var name=tp.name||tp.preferred_username||u;
-      var role=Auth.mapRole(Session.groups());
+      var groups=Session.groups();
+      console.log("Keycloak groups:", groups, "-> mapped role:", Auth.mapRole(groups));
+      var role=Auth.mapRole(groups);
       App.state.user={ role:role, name:name,
         initials:name.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase(),
         username:tp.preferred_username, email:tp.email };
