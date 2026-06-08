@@ -1038,6 +1038,7 @@ App.afterRender.commandes=function(){
       {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>';}},
       {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom);}},
       {t:"Montant",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.montant)+'</span>';}},
+      {t:"Date",r:function(r){return Util.date(r.date);}},
       {t:"Palier",r:function(r){var p=Seed.palierFor(r.montant);return C.pill(p.code,p.dbl?"imp":"mut");}},
       {t:"Liv. prévue",r:function(r){return Util.date(r.livPrevue);}},
       {t:"Statut",r:function(r){var m={"En retard":"crit","En cours":"info","Soldée":"ok","Validée":"ok"};return C.pill(r.statut,m[r.statut]||"mut");}},
@@ -1096,6 +1097,7 @@ App.afterRender.receptions=function(){
     document.getElementById("recTable").innerHTML=C.table([
     {t:"Réf",r:function(r){return '<b class="mono">'+r.id+'</b>';}},
     {t:"Fournisseur",r:function(r){return Util.esc(Seed.four(r.fournisseurId).nom)||'-';}},
+    {t:"Article",r:function(r){return Util.esc(Seed.art(r.articleId).nom)||'-';}},
     {t:"Qté",num:true,k:"qte"},
     {t:"Montant HT",num:true,r:function(r){return '<span class="mono">'+Util.fcfa(r.montant)+'</span>';}},
     {t:"Date",r:function(r){return Util.date(r.date);}},
