@@ -2049,6 +2049,9 @@ Boot.renderLoginForm = function(){
     if(!u || !p) return;
     btn.disabled=true; btn.textContent="Connexion...";
     Session.login(u,p).then(function(tp){
+      console.log("Token payload:", Session.parsed);
+      console.log("realm_access.roles:", Session.parsed&&Session.parsed.realm_access?Session.parsed.realm_access.roles:"N/A");
+      console.log("groups:", Session.parsed?Session.parsed.groups:"N/A");
       var groups=Session.groups();
       console.log("Keycloak groups:", groups, "-> mapped role:", Auth.mapRole(groups));
       if(groups.indexOf(window.APP_CONFIG.requiredGroup) < 0){
