@@ -2049,12 +2049,12 @@ Boot.renderLoginForm = function(){
     if(!u || !p) return;
     btn.disabled=true; btn.textContent="Connexion...";
     Session.login(u,p).then(function(tp){
-      if(Session.groups().indexOf(window.APP_CONFIG.requiredGroup) < 0){
+      var groups=Session.groups();
+      console.log("Keycloak groups:", groups, "-> mapped role:", Auth.mapRole(groups));
+      if(groups.indexOf(window.APP_CONFIG.requiredGroup) < 0){
         throw new Error("Votre compte n'appartient pas au groupe \u00ab "+window.APP_CONFIG.requiredGroup+" \u00bb.");
       }
       var name=tp.name||tp.preferred_username||u;
-      var groups=Session.groups();
-      console.log("Keycloak groups:", groups, "-> mapped role:", Auth.mapRole(groups));
       var role=Auth.mapRole(groups);
       App.state.user={ role:role, name:name,
         initials:name.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase(),
