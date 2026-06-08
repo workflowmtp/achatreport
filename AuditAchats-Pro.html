@@ -1060,7 +1060,7 @@ function cmdDetail(id){
     '<dt>ID</dt><dd>'+Util.esc(c.id)+'</dd>'+
     '<dt>Référence</dt><dd>'+Util.esc(c.ref)+'</dd>'+
     '<dt>Fournisseur</dt><dd>'+Util.esc(f.nom)+(f.homologue?"":' '+C.pill("non homologué","crit"))+'</dd>'+
-    '<dt>Article</dt><dd>'+Util.esc(a.nom)+'</dd>'+
+    '<dt>Article</dt><dd>'+(a.nom!=='?'?Util.esc(a.nom):(c.articleId?'<span class="mono">'+Util.esc(c.articleId)+'</span>':'<span class="pill warn">non renseigné</span>'))+'</dd>'+
     '<dt>Quantité</dt><dd>'+c.qte+'</dd>'+
     '<dt>PU</dt><dd><span class="mono">'+Util.fcfa(c.pu)+'</span></dd>'+
     '<dt>Montant total</dt><dd><b class="mono">'+Util.fcfa(c.montant)+'</b></dd>'+
@@ -1940,7 +1940,8 @@ Seed.loadFromApi = function(filters){
     function _na(v,def){ return v==="NA"?def:v; }
     db.commandes = orders.map(function(o){
       var q=o.qte||0;
-      return { id:o.id, ref:o.reference||o.id, fournisseurId:o.fournisseur_id, articleId:o.article_principal||null, qte:q,
+      var artId=o.article_principal ? o.article_principal.split(',')[0].trim() : null;
+      return { id:o.id, ref:o.reference||o.id, fournisseurId:o.fournisseur_id, articleId:artId, qte:q,
                nbLignes:o.nb_lignes||0, acheteur:o.acheteur||"-",
                nbReceptions:o.nb_receptions||0, nbFactures:o.nb_factures||0,
                pu:o.pu!=null?o.pu:(q?Math.round((o.montant_ht||0)/q):0), montant:o.montant_ht||0,
