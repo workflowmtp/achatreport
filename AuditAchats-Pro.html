@@ -275,6 +275,16 @@ var ROLES = {
 var Auth = {
   can:function(perm){ var u=App.state.user; if(!u) return false; var r=ROLES[u.role]; return r && r.perms.indexOf(perm)>=0; },
   readonly:function(){ var u=App.state.user; return u && ROLES[u.role] && ROLES[u.role].readonly; },
+  mapRole:function(groups){
+    var g=(groups||[]).map(function(x){return x.toLowerCase();});
+    if(g.indexOf("dg")>=0) return "dg";
+    if(g.indexOf("da")>=0) return "da";
+    if(g.indexOf("finance")>=0) return "finance";
+    if(g.indexOf("qualite")>=0 || g.indexOf("qualité")>=0) return "qualite";
+    if(g.indexOf("magasin")>=0) return "magasin";
+    if(g.indexOf("audit")>=0) return "audit";
+    return "acheteur";
+  },
   login:function(role){
     App.state.user = { role:role, name:ROLES[role].label, initials:ROLES[role].label.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase() };
     Store.set("session", App.state.user);
@@ -605,7 +615,7 @@ var Seed = {
 
   /* helpers de résolution */
   four:function(id){ return DB.fournisseurs.filter(function(f){return f.id===id;})[0]||{nom:"?",note:0}; },
-  art:function(id){ return DB.articles.filter(function(a){return a.id===id;})[0]||{nom:"?",pu:0}; }
+  art:function(id){ var k=(id||"").trim().toUpperCase(); return DB.articles.filter(function(a){return a.id===k;})[0]||{nom:"?",pu:0}; }
 };
 
 /* ---------- JOURNAL (traçabilité) ---------- */
@@ -984,13 +994,26 @@ function consCompare(id){
   var c=DB.consultations.filter(function(x){return x.id===id;})[0]; var art=Seed.art(c.articleId);
   if(!c.offres.length || c.offres.filter(function(o){return o.prix>0&&o.delai>0;}).length===0){
     var info='<p class="muted" style="margin-bottom:14px">Article : <b>'+Util.esc(art.nom)+'</b> · quantité '+c.qte+' · consultation du '+Util.date(c.date)+'</p>';
-    if(c.source==="fallback_da") info+='<p style="margin-bottom:14px">'+C.pill("Source DA","info")+" Les tables RFQ Sage sont vides ; cette consultation est dérivée des demandes d'achat. Les prix, délais et critères de choix ne sont pas disponibles.</p>";
-    info+=C.table([
-      {t:"Fournisseur",r:function(o){var f=Seed.four(o.fournisseurId); return Util.esc(f.nom||o.nom||o.fournisseurId)+(f.homologue?"":' '+C.pill("non homol.","crit"));}},
-      {t:"Prix unit.",r:function(){return '<span class="muted">NA</span>';}},
-      {t:"Délai",r:function(){return '<span class="muted">NA</span>';}},
-      {t:"Document",r:function(o){return o.docRecu?C.pill("reçu","ok"):'<span class="muted">NA</span>';}}
-    ],c.offres);
+    if(c.source==="fallback_da"){
+      info+='<p style="margin-bottom:14px">'+C.pill("Source DA","info")+" Les tables RFQ Sage sont vides ; cette consultation est dérivée des demandes d'achat. Les prix, délais et critères de choix ne sont pas disponibles.</p>";
+      info+='<dl class="kv">'+
+        '<dt>ID consultation</dt><dd>'+Util.esc(c.id)+'</dd>'+
+        '<dt>Article</dt><dd>'+Util.esc(art.nom)+(c.articleId?' <span class="mono">'+c.articleId+'</span>':'')+'</dd>'+
+        '<dt>Qté</dt><dd>'+c.qte+'</dd>'+
+        '<dt>Date</dt><dd>'+Util.date(c.date)+'</dd>'+
+        '<dt>Acheteur</dt><dd>'+Util.esc(c.acheteur)+'</dd>'+
+        '<dt>Fournisseurs contactés</dt><dd>'+(c.offres.length||0)+'</dd>'+
+        '</dl>';
+    }
+    if(c.offres.length){
+      info+='<h4 style="margin:14px 0 8px">Fournisseurs</h4>';
+      info+=C.table([
+        {t:"Fournisseur",r:function(o){var f=Seed.four(o.fournisseurId); return Util.esc(f.nom||o.nom||o.fournisseurId)+(f.homologue?"":' '+C.pill("non homol.","crit"));}},
+        {t:"Prix unit.",r:function(){return '<span class="muted">NA</span>';}},
+        {t:"Délai",r:function(){return '<span class="muted">NA</span>';}},
+        {t:"Document",r:function(o){return o.docRecu?C.pill("reçu","ok"):'<span class="muted">NA</span>';}}
+      ],c.offres);
+    }
     Modal.open("Consultation — "+id,info,'<button class="btn ghost" data-mclose>Fermer</button>');
     return;
   }
@@ -1930,7 +1953,8 @@ Seed.loadFromApi = function(filters){
                retards:s.retards||0, ribModifie:s.rib_modifie||false,
                dateCreation:s.date_creation||null }; });
     db.articles = articles.map(function(a){
-      return { id:a.code, code:a.code, nom:a.nom||a.code, famille:a.famille||"-",
+      var code=(a.code||"").trim().toUpperCase();
+      return { id:code, code:code, nom:a.nom||a.code, famille:a.famille||"-",
                pu:a.pu!=null?a.pu:(a.pu_moyen||0),
                puStd:a.pu_std!=null?a.pu_std:0,
                montantTotal:a.montant_total||0, qteTotale:a.qte_totale||0,
@@ -1942,7 +1966,7 @@ Seed.loadFromApi = function(filters){
     function _na(v,def){ return v==="NA"?def:v; }
     db.commandes = orders.map(function(o){
       var q=o.qte||0;
-      var artId=o.article_principal ? o.article_principal.split(',')[0].trim() : null;
+      var artId=o.article_principal ? o.article_principal.split(',')[0].trim().toUpperCase() : null;
       return { id:o.id, ref:o.reference||o.id, fournisseurId:o.fournisseur_id, articleId:artId, qte:q,
                nbLignes:o.nb_lignes||0, acheteur:o.acheteur||"-",
                nbReceptions:o.nb_receptions||0, nbFactures:o.nb_factures||0,
@@ -1961,7 +1985,7 @@ Seed.loadFromApi = function(filters){
       var hasEcart = !f.conforme;
       var tauxTva=_na(f.taux_tva,0); if(tauxTva>1) tauxTva=tauxTva/100;
       return { id:f.id, num:f.num_fournisseur||f.id, fournisseurId:f.fournisseur_id,
-               commandeId:m.cmd||null, receptionId:m.rec||null, articleId:f.article_id||null,
+               commandeId:m.cmd||null, receptionId:m.rec||null, articleId:f.article_id?f.article_id.trim().toUpperCase():null,
                ht:ht, ttc:ttc, statut:f.statut||"-",
                nbLignes:f.nb_lignes||0, conforme:!!f.conforme,
                ecartPrix:hasEcart, ecartQte:!!_na(f.ecart_qte,!!m.ecartQte), doublon:!!_na(f.doublon,false),
@@ -1972,7 +1996,7 @@ Seed.loadFromApi = function(filters){
                transport:_na(f.transport,0), echeance:f.echeance||null,
                justifie:!!_na(f.justifie,true), controlee:!!_na(f.controlee,false) }; });
     db.receptions = receipts.map(function(r){
-      return { id:r.id, commandeId:r.commande_id||null, fournisseurId:r.fournisseur_id, articleId:r.article_id||null,
+      return { id:r.id, commandeId:r.commande_id||null, fournisseurId:r.fournisseur_id, articleId:r.article_id?r.article_id.trim().toUpperCase():null,
                qte:r.qte||0, qteCmd:_na(r.qte_cmd,0), qteRecu:r.qte_recu||0, qteAccept:_na(r.qte_accept,0), montant:r.montant_ht||0,
                date:r.date, dateArrivee:r.date_arrivee||null,
                facturee:!!r.facturee, conforme:!!r.conforme, controlee:!!r.controlee,
@@ -1980,7 +2004,7 @@ Seed.loadFromApi = function(filters){
                controleur:_na(r.controleur,null), docQualite:!!_na(r.doc_qualite,false),
                sansCommande:!!_na(r.sans_commande,false), habilite:!!_na(r.habilite,true) }; });
     db.demandes = reqs.map(function(d){
-      return { id:d.id, demandeur:d.demandeur||"-", service:d.site||"-", articleId:d.article_principal||null,
+      return { id:d.id, demandeur:d.demandeur||"-", service:d.site||"-", articleId:d.article_principal?d.article_principal.trim().toUpperCase():null,
                qte:d.qte||0, motif:d.motif||"",
                fournisseurPropose:d.fournisseur_propose||null, montant:d.montant||0, palier:d.palier,
                statut:d.statut||"En attente", date:d.date,
@@ -1993,7 +2017,7 @@ Seed.loadFromApi = function(filters){
                           validite:o.validite, docRecu:!!_na(o.doc_recu,false), choisi:!!_na(o.choisi,false) };
                });
       offres.sort(function(a,b){ if(a.prix<=0&&b.prix<=0) return 0; if(a.prix<=0) return 1; if(b.prix<=0) return -1; return a.prix-b.prix; });
-      return { id:c.id, articleId:c.article_principal||null, qte:c.qte||0,
+      return { id:c.id, articleId:c.article_principal?c.article_principal.trim().toUpperCase():null, qte:c.qte||0,
                offres:offres,
                date:c.date, acheteur:c.acheteur||"-",
                nbConsulteRequis:_na(c.nb_consulte_requis,c.source==="fallback_da"?0:3),
@@ -2029,7 +2053,8 @@ Boot.renderLoginForm = function(){
         throw new Error("Votre compte n'appartient pas au groupe \u00ab "+window.APP_CONFIG.requiredGroup+" \u00bb.");
       }
       var name=tp.name||tp.preferred_username||u;
-      App.state.user={ role:"acheteur", name:name,
+      var role=Auth.mapRole(Session.groups());
+      App.state.user={ role:role, name:name,
         initials:name.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase(),
         username:tp.preferred_username, email:tp.email };
       btn.textContent="Chargement des donnees...";
